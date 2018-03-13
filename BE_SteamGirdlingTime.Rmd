@@ -9,3 +9,80 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+peas_data = read.csv(file = "./data/RawDataPeas.csv", header = TRUE)
+
+head(peas_data)
+
+```
+
+```{r}
+live = peas_data
+
+for(i in nrow(peas_data):1) {
+    if(peas_data[i,4] != "L") {
+        live = live[-i,] 
+    }
+}
+
+nrow(live)
+head(live)
+```
+
+```{r}
+boiled = peas_data
+
+for(i in nrow(peas_data):1) {
+    if(peas_data[i,4] != "B") {
+        boiled = boiled[-i,] 
+    }
+}
+
+nrow(boiled)
+head(boiled)
+```
+
+```{r}
+plot(peas_data$Abs_Blk)
+```
+
+```{r}
+peas_data = peas_data[-17,]
+nrow(peas_data)
+```
+
+```{r}
+plot(peas_data$Abs_Blk)
+```
+
+```{r}
+plot(peas_data$Diam, peas_data$Abs_Blk)
+```
+
+```{r}
+library(ggplot2)
+ggplot(peas_data, aes(x=peas_data$Diam, y=peas_data$Abs_Blk, color=peas_data$Trmt)) + geom_point()
+
+
+```
+
+```{r}
+ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) + geom_histogram(binwidth=.02)
+```
+
+```{r}
+mean_live = mean(live$Abs_Blk)
+mean_boiled = mean(boiled$Abs_Blk)
+
+class(mean_live)
+```
+
+```{r}
+ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) +  scale_fill_manual(values = alpha(c("blue", "red"))) + geom_histogram(binwidth=.01) + geom_vline(xintercept = mean_live, color = "red") +geom_vline(xintercept = mean_boiled, color = "blue")
+```
+
+```{r}
+sd(live$Abs_Blk)
+sd(boiled$Abs_Blk)
+```
+
