@@ -65,24 +65,34 @@ ggplot(peas_data, aes(x=peas_data$Diam, y=peas_data$Abs_Blk, color=peas_data$Trm
 
 
 ```
+```{r}
+hist(peas_data$Abs_Blk)
+```
+
+
 
 ```{r}
-ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) + geom_histogram(binwidth=.02)
+ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) + geom_histogram()
 ```
 
 ```{r}
 mean_live = mean(live$Abs_Blk)
 mean_boiled = mean(boiled$Abs_Blk)
 
-class(mean_live)
 ```
 
 ```{r}
-ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) +  scale_fill_manual(values = alpha(c("blue", "red"))) + geom_histogram(binwidth=.01) + geom_vline(xintercept = mean_live, color = "red") +geom_vline(xintercept = mean_boiled, color = "blue")
+ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) +  scale_fill_manual(values = alpha(c("#666666", "#339900"))) + geom_histogram(binwidth=.01) + geom_vline(xintercept = mean_live, color = "#339900", size=1) +geom_vline(xintercept = mean_boiled, color = "#666666", size=1)
 ```
 
 ```{r}
 sd(live$Abs_Blk)
 sd(boiled$Abs_Blk)
+max(boiled$Abs_Blk)
 ```
+
+```{r}
+plot(peas_data$Trmt, peas_data$Abs_Blk)
+```
+
 
