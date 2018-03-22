@@ -102,12 +102,87 @@ ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt))
 ```
 
 ```{r}
-ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point()
+ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
 ```
 
+```{r}
+head(pea_data)
+live = pea_data
+
+for(i in nrow(pea_data):1) {
+    if(pea_data[i,2] != "L") {
+        live = live[-i,] 
+    }
+}
+
+nrow(live)
+head(live)
+
+mean_lives = mean(live$Abs_Mass)
+```
+
+```{r}
+head(pea_data)
+boileds = pea_data
+
+for(i in nrow(pea_data):1) {
+    if(pea_data[i,2] != "B") {
+        live = live[-i,] 
+    }
+}
+
+nrow(boileds)
+head(boileds)
+
+mean_boileds = mean(boileds$Abs_Mass)
+
+```
 
 
 ```{r}
 ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram()
+
+```
+
+```{r}
+plot(pea_data$Trmt, pea_data$Abs_Mass)
+```
+
+```{r}
+head(pea_data)
+taps = pea_data
+
+for(i in nrow(pea_data):1) {
+    if(pea_data[i,3] != "Tap") {
+        taps = taps[-i,] 
+    }
+}
+
+nrow(taps)
+head(taps)
+
+lats = pea_data
+
+for(i in nrow(pea_data):1) {
+    if(lats[i,3] != "Lat") {
+        lats = lats[-i,] 
+    }
+}
+
+nrow(lats)
+head(lats)
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(taps$Trmt, taps$Abs_Mass, main = "tap roots")
+plot(lats$Trmt, lats$Abs_Mass, main = "lateral roots")
+```
+
+
+```{r}
+par(mfrow = c(2,1))
+ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
+ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
 ```
 
