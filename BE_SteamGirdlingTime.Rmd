@@ -95,4 +95,19 @@ max(boiled$Abs_Blk)
 plot(peas_data$Trmt, peas_data$Abs_Blk)
 ```
 
+```{r}
+pea_data = read.csv(file = "./data/FirstTestData.csv", header = TRUE)
+library(ggplot2)
+ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
+```
+
+```{r}
+ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point()
+```
+
+
+
+```{r}
+ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram()
+```
 
