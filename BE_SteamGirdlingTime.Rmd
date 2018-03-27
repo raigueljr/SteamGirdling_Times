@@ -96,21 +96,20 @@ plot(peas_data$Trmt, peas_data$Abs_Blk)
 ```
 
 ```{r}
-pea_data = read.csv(file = "./data/FirstTestData.csv", header = TRUE)
+pea_data = read.csv(file = "./data/RawDataPeas.csv", header = TRUE)
 library(ggplot2)
+
 ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
 ```
 
-```{r}
-ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
-```
+
 
 ```{r}
 head(pea_data)
 live = pea_data
 
 for(i in nrow(pea_data):1) {
-    if(pea_data[i,2] != "L") {
+    if(pea_data[i,4] != "L") {
         live = live[-i,] 
     }
 }
@@ -126,7 +125,7 @@ head(pea_data)
 boileds = pea_data
 
 for(i in nrow(pea_data):1) {
-    if(pea_data[i,2] != "B") {
+    if(pea_data[i,4] != "B") {
         live = live[-i,] 
     }
 }
@@ -137,7 +136,9 @@ head(boileds)
 mean_boileds = mean(boileds$Abs_Mass)
 
 ```
-
+```{r}
+ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
+```
 
 ```{r}
 ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram()
@@ -153,7 +154,7 @@ head(pea_data)
 taps = pea_data
 
 for(i in nrow(pea_data):1) {
-    if(pea_data[i,3] != "Tap") {
+    if(pea_data[i,5] != "Tap") {
         taps = taps[-i,] 
     }
 }
@@ -164,7 +165,7 @@ head(taps)
 lats = pea_data
 
 for(i in nrow(pea_data):1) {
-    if(lats[i,3] != "Lat") {
+    if(lats[i,5] != "Lat") {
         lats = lats[-i,] 
     }
 }
@@ -175,7 +176,7 @@ head(lats)
 
 ```{r}
 par(mfrow = c(1,2))
-plot(taps$Trmt, taps$Abs_Mass, main = "tap roots")
+plot(taps$Trmt, taps$Abs_Mass, main = "tap roots", )
 plot(lats$Trmt, lats$Abs_Mass, main = "lateral roots")
 ```
 
@@ -184,5 +185,58 @@ plot(lats$Trmt, lats$Abs_Mass, main = "lateral roots")
 par(mfrow = c(2,1))
 ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
 ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
+```
+
+```{r}
+all_model = lm(Abs_Mass~ Trmt + Diam + Trmt*Diam, data = pea_data)
+
+summary(model)
+```
+
+```{r}
+tap_model = lm(Abs_Mass~ Trmt + Diam, data = taps)
+summary(tap_model)
+```
+
+```{r}
+lats_model = lm(Abs_Mass~ Trmt + Diam + Trmt*Diam, data = lats)
+summary(lats_model)
+
+```
+
+```{r}
+ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=Trmt)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
+```
+
+```{r}
+Smp_5 = pea_data
+Smp_10 = pea_data
+Smp_15 = pea_data
+Smp_20 = pea_data
+Smp_30 = pea_data
+Smp_L = pea_data
+Smp_B = pea_data
+
+Smp_Matrices = c(Smp_5, Smp_10, Smp_15, Smp_20, Smp_30, Smp_L, Smp_B)
+Smp_Trmt = c("5", "10", "15", "20", "30", "L", "B")
+
+
+
+for(i in 1:7) {
+  Placeholder = Smp_Matrices[i]  
+  for(j in nrow(pea_data):1) {
+        if(pea_data[j,4] != Smp_Trmt[i]) {
+          Placeholder = Placeholder[-j,]
+        }
+    }
+}
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+with(pea_data[pea_data$Trmt == "5",], plot(pea_data$Diam, pea_data$Abs_Mass))
+with(pea_data[pea_data$Trmt == "L",], plot(pea_data$Diam, pea_data$Abs_Mass))
+
 ```
 
