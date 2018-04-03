@@ -70,8 +70,10 @@ Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 
 ```{r}
 #Plot all data by treatment
-plot(all_peas$Trmt, all_peas$Abs_Mass)
+all_boxplot = plot(all_peas$Trmt, all_peas$Abs_Mass)
+all_boxplot$out
 ```
+
 
 ```{r}
 #Check to see if dividing out the mass caused increase in 45-120
@@ -115,65 +117,110 @@ hist(Trmt_B$Abs_Mass, main = "Boiled", xlab = "Absorbance/Dry Mass")
 ```{r}
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(all_peas$Trmt) 
-all_model = lm(Abs_Mass ~ Trmt, data = all_peas)
+all_trmt_model = lm(Abs_Mass ~ Trmt, data = all_peas)
 
-summary(all_model)
-Anova(all_model, type =3)
+summary(all_trmt_model)
+Anova(all_trmt_model, type =3)
 
 par(mfrow = c(2,2))
-plot(all_model)
+plot(all_trmt_model)
+```
+
+```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+all_trmt_glm = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
+
+summary(all_trmt_glm)
+Anova(all_trmt_glm, type =3)
 ```
 
 ```{r}
 Diam_Lat$Trmt = factor(Diam_Lat$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(Diam_Lat$Trmt) 
-all_model = lm(Abs_Mass ~ Trmt, data = Diam_Lat)
+lat_trmt_model = lm(Abs_Mass ~ Trmt, data = Diam_Lat)
 
-summary(all_model)
-Anova(all_model, type =3)
+summary(lat_trmt_model)
+Anova(lat_trmt_model, type =3)
 
 par(mfrow = c(2,2))
-plot(all_model)
+plot(lat_trmt_model)
 ```
+
+```{r}
+#Check normality of data
+hist(all_peas$Abs_Mass)
+
+#Try regression model
+all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas, family = Gamma())
+summary(all_time_gamma)
+```
+
+```{r}
+all_time_binomial = glm(Abs_Mass ~ Time, data = all_peas, family = binomial())
+summary(all_time_binomial)
+```
+```{r}
+all_time_gaussian = glm(Abs_Mass ~ Time, data = all_peas, family = gaussian())
+summary(all_time_gaussian)
+```
+
+```{r}
+anova(all_time_gamma, all_time_gaussian, all_time_binomial)
+```
+
+```{r}
+all_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve <- predict(all_time_gamma,newdata=all_gamma_predict,type="response")
+plot(all_peas$Abs_Mass~ Time, data=all_peas)
+lines(gamma_curve~Time, data = all_gamma_predict)
+```
+
+
+```{r}
+#Check normality of lateral root data
+hist(Diam_Lat$Abs_Mass)
+
+#Try regression model on lateral roots only
+lat_time_model = glm(Abs_Mass ~ Time, data = Diam_Lat, family = Gamma())
+summary(lat_time_model)
+
+```
+
+```{r}
+lat_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve_lat <- predict(lat_time_model,newdata=lat_gamma_predict,type="response")
+plot(Diam_Lat$Abs_Mass~ Diam_Lat$Time)
+lines(gamma_curve_lat~Time, data = lat_gamma_predict)
+```
+
+```{r}
+
+```
+
+
+```{r}
+#Plot Absorbance by Diameter for each treatment
+par(mfrow = c(2,5))
+plot(Abs_Mass ~ Diam, data = Trmt_L, main = "Live", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_5, main = "5 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_10, main = "10 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_15, main = "15 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_20, main = "20 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_30, main = "30 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_45, main = "45 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_60, main = "60 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_120, main = "120 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_B, main = "Boiled", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+
+```
+
 
 ```{r}
 ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
 ```
 
 
-
-```{r}
-head(pea_data)
-live = pea_data
-
-for(i in nrow(pea_data):1) {
-    if(pea_data[i,4] != "L") {
-        live = live[-i,] 
-    }
-}
-
-nrow(live)
-head(live)
-
-mean_lives = mean(live$Abs_Mass)
-```
-
-```{r}
-head(pea_data)
-boileds = pea_data
-
-for(i in nrow(pea_data):1) {
-    if(pea_data[i,4] != "B") {
-        live = live[-i,] 
-    }
-}
-
-nrow(boileds)
-head(boileds)
-
-mean_boileds = mean(boileds$Abs_Mass)
-
-```
 ```{r}
 ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
 ```
@@ -183,41 +230,6 @@ ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram(
 
 ```
 
-```{r}
-plot(pea_data$Trmt, pea_data$Abs_Mass)
-```
-
-```{r}
-head(pea_data)
-taps = pea_data
-
-for(i in nrow(pea_data):1) {
-    if(pea_data[i,5] != "Tap") {
-        taps = taps[-i,] 
-    }
-}
-
-nrow(taps)
-head(taps)
-
-lats = pea_data
-
-for(i in nrow(pea_data):1) {
-    if(lats[i,5] != "Lat") {
-        lats = lats[-i,] 
-    }
-}
-
-nrow(lats)
-head(lats)
-```
-
-```{r}
-par(mfrow = c(1,2))
-plot(taps$Trmt, taps$Abs_Mass, main = "tap roots", )
-plot(lats$Trmt, lats$Abs_Mass, main = "lateral roots")
-```
-
 
 ```{r}
 par(mfrow = c(1,2))
@@ -225,38 +237,11 @@ ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
 ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
 ```
 
-```{r}
-library(car)
-pea_data$Trmt = factor(pea_data$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30'))
-contrasts(pea_data$Trmt) 
-all_model = lm(Abs_Mass ~ Trmt, data = pea_data)
 
-summary(all_model)
-Anova(all_model, type =3)
 
-par(mfrow = c(2,2))
-plot(all_model)
-```
 
-```{r}
-tap_model = lm(Abs_Mass~ time + Diam, data = taps)
-summary(tap_model)
-```
 
-```{r}
-lats_model = lm(Abs_Mass~ time + Diam, data = lats)
-summary(lats_model)
 
-```
-
-```{r}
-
-pea_data[pea_data$Trmt == '10', ]
-subset(pea_data, Trmt == '10')
-aggregate(pea_data[ , c('Diam', ')], list(Trmt, Tap_Lat), quantile, c(0.025, 0.975)))
-
-ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=Trmt, )) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
-```
 
 
 
