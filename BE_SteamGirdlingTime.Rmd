@@ -10,95 +10,109 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-peas_data = read.csv(file = "./data/RawDataPeas.csv", header = TRUE)
-
-head(peas_data)
-
+#Call necessary libraries
+library(ggplot2)
+library(car)
 ```
 
-```{r}
-live = peas_data
 
-for(i in nrow(peas_data):1) {
-    if(peas_data[i,4] != "L") {
-        live = live[-i,] 
+```{r}
+#Read in csv file and delete empty columns
+all_peas = read.csv(file = "./data/FinalDataPeas.csv", header = TRUE)
+
+head(all_peas)
+all_peas = all_peas[,-c(14:19)]
+colnames(all_peas)
+nrow(all_peas)
+
+#Remove rows of samples eliminated because of mistakes in experiment
+Sample = match("Smp",colnames(all_peas))
+
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Sample] == 90 | 
+       all_peas[i,Sample] == 91 | 
+       all_peas[i,Sample] == 177) {
+          all_peas = all_peas[-i,]
     }
 }
 
-nrow(live)
-head(live)
+nrow(all_peas)
 ```
 
 ```{r}
-boiled = peas_data
+#Order Treatments
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
 
-for(i in nrow(peas_data):1) {
-    if(peas_data[i,4] != "B") {
-        boiled = boiled[-i,] 
-    }
-}
+#Create Numeric Treatments Column for Regressions
+all_peas$Time = ifelse(all_peas$Trmt == 'L', 0, ifelse(all_peas$Trmt == 'B', NA, as.numeric(as.character(all_peas$Trmt))))
 
-nrow(boiled)
-head(boiled)
-```
-
-```{r}
-plot(peas_data$Abs_Blk)
-```
-
-```{r}
-peas_data = peas_data[-17,]
-nrow(peas_data)
-```
-
-```{r}
-plot(peas_data$Abs_Blk)
-```
-
-```{r}
-plot(peas_data$Diam, peas_data$Abs_Blk)
-```
-
-```{r}
-library(ggplot2)
-ggplot(peas_data, aes(x=peas_data$Diam, y=peas_data$Abs_Blk, color=peas_data$Trmt)) + geom_point()
-
-
-```
-```{r}
-hist(peas_data$Abs_Blk)
+head(all_peas)
 ```
 
 
-
 ```{r}
-ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) + geom_histogram()
+#Subset Data by Treatment
+Trmt_5 = subset(all_peas, all_peas$Trmt == '5')
+nrow(Trmt_5)
+
+Trmt_10 = subset(all_peas, all_peas$Trmt == '10')
+Trmt_15 = subset(all_peas, all_peas$Trmt == '15')
+Trmt_20 = subset(all_peas, all_peas$Trmt == '20')
+Trmt_30 = subset(all_peas, all_peas$Trmt == '30')
+Trmt_45 = subset(all_peas, all_peas$Trmt == '45')
+Trmt_60 = subset(all_peas, all_peas$Trmt == '60')
+Trmt_120 = subset(all_peas, all_peas$Trmt == '120')
+Trmt_L = subset(all_peas, all_peas$Trmt == 'L')
+Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 ```
 
 ```{r}
-mean_live = mean(live$Abs_Blk)
-mean_boiled = mean(boiled$Abs_Blk)
+#Plot all data by treatment
+plot(all_peas$Trmt, all_peas$Abs_Mass)
+```
+
+```{r}
+#Check to see if dividing out the mass caused increase in 45-120
+plot(all_peas$Trmt, all_peas$Abs_Blk)
+```
+
+```{r}
+#Subset data by Tap Roots and Lateral Roots
+Diam_Tap = subset(all_peas, all_peas$Tap_Lat == "Tap")
+Diam_Lat = subset(all_peas, all_peas$Tap_Lat == "Lat")
+
+nrow(Diam_Tap)
+nrow(Diam_Lat)
+```
+
+```{r}
+#Plot Data by Taps and Lats
+par(mfrow = c(1,2))
+plot(Diam_Tap$Trmt, Diam_Tap$Abs_Mass, main = "Tap Roots", ylab = "Absorbance/Dry Mass")
+plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, main = "Lateral Roots", ylab = "Absorbance/Dry Mass")
+```
+
+
+```{r}
+#Check normality of data to find it is skewed to the left
+par(mfrow = c(2,5))
+
+hist(Trmt_5$Abs_Mass, main = "5 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_10$Abs_Mass, main = "10 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_15$Abs_Mass, main = "15 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_20$Abs_Mass, main = "20 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_30$Abs_Mass, main = "30 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_45$Abs_Mass, main = "45 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_60$Abs_Mass, main = "60 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_120$Abs_Mass, main = "120 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_L$Abs_Mass, main = "Live", xlab = "Absorbance/Dry Mass")
+hist(Trmt_B$Abs_Mass, main = "Boiled", xlab = "Absorbance/Dry Mass")
 
 ```
 
 ```{r}
-ggplot(peas_data, aes(x=peas_data$Abs_Blk, fill=peas_data$Trmt)) +  scale_fill_manual(values = alpha(c("#666666", "#339900"))) + geom_histogram(binwidth=.01) + geom_vline(xintercept = mean_live, color = "#339900", size=1) +geom_vline(xintercept = mean_boiled, color = "#666666", size=1)
-```
-
-```{r}
-sd(live$Abs_Blk)
-sd(boiled$Abs_Blk)
-max(boiled$Abs_Blk)
-```
-
-```{r}
-plot(peas_data$Trmt, peas_data$Abs_Blk)
-```
-
-```{r}
-pea_data = read.csv(file = "./data/RawDataPeas.csv", header = TRUE)
-library(ggplot2)
-
 ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
 ```
 
@@ -182,61 +196,43 @@ plot(lats$Trmt, lats$Abs_Mass, main = "lateral roots")
 
 
 ```{r}
-par(mfrow = c(2,1))
+par(mfrow = c(1,2))
 ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
 ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
 ```
 
 ```{r}
-all_model = lm(Abs_Mass~ Trmt + Diam + Trmt*Diam, data = pea_data)
+library(car)
+pea_data$Trmt = factor(pea_data$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30'))
+contrasts(pea_data$Trmt) 
+all_model = lm(Abs_Mass ~ Trmt, data = pea_data)
 
-summary(model)
+summary(all_model)
+Anova(all_model, type =3)
+
+par(mfrow = c(2,2))
+plot(all_model)
 ```
 
 ```{r}
-tap_model = lm(Abs_Mass~ Trmt + Diam, data = taps)
+tap_model = lm(Abs_Mass~ time + Diam, data = taps)
 summary(tap_model)
 ```
 
 ```{r}
-lats_model = lm(Abs_Mass~ Trmt + Diam + Trmt*Diam, data = lats)
+lats_model = lm(Abs_Mass~ time + Diam, data = lats)
 summary(lats_model)
 
 ```
 
 ```{r}
-ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=Trmt)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
+
+pea_data[pea_data$Trmt == '10', ]
+subset(pea_data, Trmt == '10')
+aggregate(pea_data[ , c('Diam', ')], list(Trmt, Tap_Lat), quantile, c(0.025, 0.975)))
+
+ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=Trmt, )) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
 ```
 
-```{r}
-Smp_5 = pea_data
-Smp_10 = pea_data
-Smp_15 = pea_data
-Smp_20 = pea_data
-Smp_30 = pea_data
-Smp_L = pea_data
-Smp_B = pea_data
 
-Smp_Matrices = c(Smp_5, Smp_10, Smp_15, Smp_20, Smp_30, Smp_L, Smp_B)
-Smp_Trmt = c("5", "10", "15", "20", "30", "L", "B")
-
-
-
-for(i in 1:7) {
-  Placeholder = Smp_Matrices[i]  
-  for(j in nrow(pea_data):1) {
-        if(pea_data[j,4] != Smp_Trmt[i]) {
-          Placeholder = Placeholder[-j,]
-        }
-    }
-}
-
-```
-
-```{r}
-par(mfrow = c(1,2))
-with(pea_data[pea_data$Trmt == "5",], plot(pea_data$Diam, pea_data$Abs_Mass))
-with(pea_data[pea_data$Trmt == "L",], plot(pea_data$Diam, pea_data$Abs_Mass))
-
-```
 
