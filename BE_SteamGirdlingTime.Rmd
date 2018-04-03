@@ -148,13 +148,26 @@ plot(lat_trmt_model)
 ```
 
 ```{r}
-#Check normality of data
+#Check shape of data
 hist(all_peas$Abs_Mass)
 
 #Try regression model
-all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas, family = Gamma())
+all_time_gamma = glm(Abs_Mass ~ Time + Diam, data = all_peas)
 summary(all_time_gamma)
 ```
+```{r}
+nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
+summary(nomass_time_gamma)
+
+```
+
+```{r}
+nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve <- predict(nomass_time_gamma,newdata=all_gamma_predict,type="response")
+plot(all_peas$Abs_Blk~ Time, data=all_peas)
+lines(gamma_curve~Time, data = nomass_gamma_predict)
+```
+
 
 ```{r}
 all_time_binomial = glm(Abs_Mass ~ Time, data = all_peas, family = binomial())
@@ -182,7 +195,7 @@ lines(gamma_curve~Time, data = all_gamma_predict)
 hist(Diam_Lat$Abs_Mass)
 
 #Try regression model on lateral roots only
-lat_time_model = glm(Abs_Mass ~ Time, data = Diam_Lat, family = Gamma())
+lat_time_model = glm(Abs_Mass ~ Time, data = Diam_Lat, family = Gamma)
 summary(lat_time_model)
 
 ```
@@ -192,10 +205,6 @@ lat_gamma_predict <- data.frame(Time=seq(0,120,5))
 gamma_curve_lat <- predict(lat_time_model,newdata=lat_gamma_predict,type="response")
 plot(Diam_Lat$Abs_Mass~ Diam_Lat$Time)
 lines(gamma_curve_lat~Time, data = lat_gamma_predict)
-```
-
-```{r}
-
 ```
 
 
@@ -212,9 +221,63 @@ plot(Abs_Mass ~ Diam, data = Trmt_45, main = "45 seconds", xlab = "Diameter (mm)
 plot(Abs_Mass ~ Diam, data = Trmt_60, main = "60 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
 plot(Abs_Mass ~ Diam, data = Trmt_120, main = "120 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
 plot(Abs_Mass ~ Diam, data = Trmt_B, main = "Boiled", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
-
 ```
 
+```{r}
+
+boxplot(all_peas$Abs_Mass~ all_peas$Plant)
+
+all_peas$Plant = as.factor(all_peas$Plant)
+plant_model = lm(Abs_Mass~ Plant + Trmt, data = all_peas)
+Anova(plant_model)
+
+head(all_peas)
+```
+```{r}
+par(mfrow = c(2,5))
+boxplot(Abs_Mass~ Plant, data = Trmt_5, main = "5 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_10, main = "10 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_15, main = "15 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_20, main = "20 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_30, main = "30 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_45, main = "45 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_60, main = "60 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_120, main = "120 seconds")
+boxplot(Abs_Mass~ Plant, data = Trmt_L, main = "Live")
+boxplot(Abs_Mass~ Plant, data = Trmt_B, main = "Boiled")
+```
+```{r}
+Live_plant_model =  lm(Abs_Mass~ Plant, data = Trmt_L)
+summary(Live_plant_model)
+
+Boiled_plant_model = lm(Abs_Mass~ Plant, data = Trmt_B)
+summary(Boiled_plant_model)
+
+plant_model_5 = lm(Abs_Mass~ Plant, data = Trmt_5)
+summary(plant_model_5)
+
+plant_model_10 = lm(Abs_Mass~ Plant, data = Trmt_10)
+summary(plant_model_10)
+
+plant_model_15 = lm(Abs_Mass~ Plant, data = Trmt_15)
+summary(plant_model_15)
+
+plant_model_20 = lm(Abs_Mass~ Plant, data = Trmt_20)
+summary(plant_model_20)
+
+plant_model_30 = lm(Abs_Mass~ Plant, data = Trmt_30)
+summary(plant_model_30)
+
+plant_model_45 = lm(Abs_Mass~ Plant, data = Trmt_45)
+summary(plant_model_45)
+
+plant_model_60 = lm(Abs_Mass~ Plant, data = Trmt_60)
+summary(plant_model_60)
+
+plant_model_120 = lm(Abs_Mass~ Plant, data = Trmt_120)
+summary(plant_model_120)
+
+```
 
 ```{r}
 ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
