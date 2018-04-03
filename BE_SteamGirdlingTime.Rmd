@@ -113,6 +113,30 @@ hist(Trmt_B$Abs_Mass, main = "Boiled", xlab = "Absorbance/Dry Mass")
 ```
 
 ```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+all_model = lm(Abs_Mass ~ Trmt, data = all_peas)
+
+summary(all_model)
+Anova(all_model, type =3)
+
+par(mfrow = c(2,2))
+plot(all_model)
+```
+
+```{r}
+Diam_Lat$Trmt = factor(Diam_Lat$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(Diam_Lat$Trmt) 
+all_model = lm(Abs_Mass ~ Trmt, data = Diam_Lat)
+
+summary(all_model)
+Anova(all_model, type =3)
+
+par(mfrow = c(2,2))
+plot(all_model)
+```
+
+```{r}
 ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
 ```
 
