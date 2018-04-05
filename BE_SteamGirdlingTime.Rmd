@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #Call necessary libraries
 library(ggplot2)
 library(car)
+library(lme4)
 ```
 
 
@@ -90,10 +91,12 @@ nrow(Diam_Lat)
 ```
 
 ```{r}
-#Plot Data by Taps and Lats
-par(mfrow = c(1,2))
+#Plot Data by Taps and Lats (With and Without Mass Correction)
+par(mfrow = c(2,2))
 plot(Diam_Tap$Trmt, Diam_Tap$Abs_Mass, main = "Tap Roots", ylab = "Absorbance/Dry Mass")
-plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, main = "Lateral Roots", ylab = "Absorbance/Dry Mass")
+plot(Diam_Lat$Trmt, Diam_Lat$Abs_Mass, main = "Lateral Roots", ylab = "Absorbance/Dry Mass")
+plot(Diam_Tap$Trmt, Diam_Tap$Abs_Blk, ylab = "Absorbance")
+plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, ylab = "Absorbance")
 ```
 
 
@@ -134,6 +137,14 @@ all_trmt_glm = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
 summary(all_trmt_glm)
 Anova(all_trmt_glm, type =3)
 ```
+```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+nomass_trmt_glm = glm(Abs_Blk ~ Trmt, data = all_peas, family = Gamma())
+
+summary(nomass_trmt_glm)
+Anova(nomass_trmt_glm, type =3)
+```
 
 ```{r}
 Diam_Lat$Trmt = factor(Diam_Lat$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
@@ -157,13 +168,14 @@ summary(all_time_gamma)
 ```
 ```{r}
 nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
+
 summary(nomass_time_gamma)
 
 ```
 
 ```{r}
 nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
-gamma_curve <- predict(nomass_time_gamma,newdata=all_gamma_predict,type="response")
+gamma_curve <- predict(nomass_time_gamma,newdata=nomass_gamma_predict,type="response")
 plot(all_peas$Abs_Blk~ Time, data=all_peas)
 lines(gamma_curve~Time, data = nomass_gamma_predict)
 ```
@@ -298,6 +310,13 @@ ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram(
 par(mfrow = c(1,2))
 ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
 ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
+```
+
+```{r}
+mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = all_peas)
+summary(mixed_model)
+
+all_peas$mixedfit = predict(mixed_model)
 ```
 
 
