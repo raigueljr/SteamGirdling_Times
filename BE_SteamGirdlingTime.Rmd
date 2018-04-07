@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(car)
 library(lme4)
+library(cowplot)
 ```
 
 
@@ -319,39 +320,52 @@ summary(mixed_model)
 ```
 
 ```{r}
-#get fitted values from the model
+#get fitted values from the model and mean of boiled controls
 peas_noboiled$fit = fitted(mixed_model)
 
 boil_mean = mean(Smp_B$Abs_Blk)
  
+```
 
-#Pretty graph:
-
-plot2 = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk))
-
-plot2 = plot2+ geom_point(size = 2.5, shape = 19, aes(color=Tap_Lat))
-
-plot2= plot2 + geom_smooth(aes(y=peas_noboiled$fit), color = "black", method="glm",se=FALSE,method.args = list(family = "Gamma")) + scale_color_manual(values=c("#FF9933", "#666666")) + geom_hline(aes(yintercept = boil_mean))
-
-plot2
-
- #Pretty graph:
-
+```{r}
+#Make mixed plot
+pdf('./figs/mixed_model_plot.pdf')
 Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
     geom_point(size = 2.5, shape = 19) + 
     xlab("Steam Time (s)") +
     ylab("Absorbance (490 nm)") +
-    theme(axis.text = element_text(face = "bold", size = 12), axis.title = element_text(face = "bold", size = 14)) +
-    geom_smooth(aes(y=peas_noboiled$fit), color = "orange", size = 1.5, 
+    theme(axis.text = element_text(face = "bold", size = 12), 
+          axis.title = element_text(face = "bold", size = 14)) +
+    geom_smooth(aes(y=peas_noboiled$fit), color = "#33CCFF", size = 1.5, 
                method="glm",se=FALSE,method.args = list(family = "Gamma")) +
     geom_hline(aes(yintercept = boil_mean), color = "#999999", 
                linetype = "dashed", size = 1.5) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-    
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white", colour = "white"), plot.background = element_rect(fill = "lightgray"))
+```
 
+```{r}
 Mixed_model_plot
 ```
 
+
+```{r}
+#Make plot of diameters
+pdf('./figs/diam_plot.pdf')
+diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk, color=Trmt)) +
+    geom_point()  + 
+    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE) +
+    facet_wrap(~ Trmt, nrow = 3) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+    xlab("Diameter (mm)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.title = element_text(face = "bold", size = 14))
+```
+
+```{r}
+diam_plot
+```
 
 
 
