@@ -28,6 +28,7 @@ nrow(all_peas)
 
 #Remove rows of samples eliminated because of mistakes in experiment
 Sample = match("Smp",colnames(all_peas))
+Plant_id = match("Plant", colnames(all_peas))
 
 for(i in nrow(all_peas):1) {
     if(all_peas[i,Sample] == 90 | 
@@ -101,19 +102,19 @@ plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, ylab = "Absorbance")
 
 
 ```{r}
-#Check normality of data to find it is skewed to the left
+#Check distribution of data
 par(mfrow = c(2,5))
 
-hist(Trmt_5$Abs_Mass, main = "5 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_10$Abs_Mass, main = "10 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_15$Abs_Mass, main = "15 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_20$Abs_Mass, main = "20 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_30$Abs_Mass, main = "30 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_45$Abs_Mass, main = "45 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_60$Abs_Mass, main = "60 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_120$Abs_Mass, main = "120 seconds", xlab = "Absorbance/Dry Mass")
-hist(Trmt_L$Abs_Mass, main = "Live", xlab = "Absorbance/Dry Mass")
-hist(Trmt_B$Abs_Mass, main = "Boiled", xlab = "Absorbance/Dry Mass")
+hist(Trmt_5$Abs_Blk, main = "5 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_10$Abs_Blk, main = "10 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_15$Abs_Blk, main = "15 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_20$Abs_Blk, main = "20 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_30$Abs_Blk, main = "30 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_45$Abs_Blk, main = "45 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_60$Abs_Blk, main = "60 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_120$Abs_Blk, main = "120 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_L$Abs_Blk, main = "Live", xlab = "Absorbance/Dry Mass")
+hist(Trmt_B$Abs_Blk, main = "Boiled", xlab = "Absorbance/Dry Mass")
 
 ```
 
@@ -138,6 +139,12 @@ summary(all_trmt_glm)
 Anova(all_trmt_glm, type =3)
 ```
 ```{r}
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Plant_id] == 82) {
+          all_peas = all_peas[-i,]
+    }
+}
+
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(all_peas$Trmt) 
 nomass_trmt_glm = glm(Abs_Blk ~ Trmt, data = all_peas, family = Gamma())
@@ -166,20 +173,6 @@ hist(all_peas$Abs_Mass)
 all_time_gamma = glm(Abs_Mass ~ Time + Diam, data = all_peas)
 summary(all_time_gamma)
 ```
-```{r}
-nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
-
-summary(nomass_time_gamma)
-
-```
-
-```{r}
-nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
-gamma_curve <- predict(nomass_time_gamma,newdata=nomass_gamma_predict,type="response")
-plot(all_peas$Abs_Blk~ Time, data=all_peas)
-lines(gamma_curve~Time, data = nomass_gamma_predict)
-```
-
 
 ```{r}
 all_time_binomial = glm(Abs_Mass ~ Time, data = all_peas, family = binomial())
@@ -203,7 +196,7 @@ lines(gamma_curve~Time, data = all_gamma_predict)
 
 
 ```{r}
-#Check normality of lateral root data
+#Check lateral root data shape
 hist(Diam_Lat$Abs_Mass)
 
 #Try regression model on lateral roots only
@@ -219,6 +212,19 @@ plot(Diam_Lat$Abs_Mass~ Diam_Lat$Time)
 lines(gamma_curve_lat~Time, data = lat_gamma_predict)
 ```
 
+```{r}
+nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
+
+summary(nomass_time_gamma)
+
+```
+
+```{r}
+nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve <- predict(nomass_time_gamma,newdata=nomass_gamma_predict,type="response")
+plot(all_peas$Abs_Blk~ Time, data=all_peas)
+lines(gamma_curve~Time, data = nomass_gamma_predict)
+```
 
 ```{r}
 #Plot Absorbance by Diameter for each treatment
@@ -291,32 +297,59 @@ summary(plant_model_120)
 
 ```
 
-```{r}
-ggplot(pea_data, aes(x=pea_data$Diam, y=pea_data$Abs_Mass, color=pea_data$Trmt)) + geom_point()
-```
-
 
 ```{r}
-ggplot(pea_data, aes(x=pea_data$Trmt, y=pea_data$Abs_Mass)) + geom_point() + geom_hline(yintercept = mean_boileds, size=1)
-```
+#Remove NAs to make mixed effect model
+peas_noboiled = all_peas
 
-```{r}
-ggplot(pea_data, aes(x=pea_data$Abs_Mass, fill=pea_data$Trmt)) + geom_histogram()
+Treatment = match("Trmt",colnames(all_peas))
 
-```
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Treatment] == "B") {
+          peas_noboiled = peas_noboiled[-i,]
+    }
+}
 
+nrow(peas_noboiled)
 
-```{r}
-par(mfrow = c(1,2))
-ggplot(taps, aes(x=taps$Abs_Mass, fill=taps$Trmt)) + geom_histogram()
-ggplot(lats, aes(x=lats$Abs_Mass, fill=lats$Trmt)) + geom_histogram()
-```
-
-```{r}
-mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = all_peas)
+#Make mixed model of time removing plant and diameter
+mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = peas_noboiled)
 summary(mixed_model)
 
-all_peas$mixedfit = predict(mixed_model)
+```
+
+```{r}
+#get fitted values from the model
+peas_noboiled$fit = fitted(mixed_model)
+
+boil_mean = mean(Smp_B$Abs_Blk)
+ 
+
+#Pretty graph:
+
+plot2 = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk))
+
+plot2 = plot2+ geom_point(size = 2.5, shape = 19, aes(color=Tap_Lat))
+
+plot2= plot2 + geom_smooth(aes(y=peas_noboiled$fit), color = "black", method="glm",se=FALSE,method.args = list(family = "Gamma")) + scale_color_manual(values=c("#FF9933", "#666666")) + geom_hline(aes(yintercept = boil_mean))
+
+plot2
+
+ #Pretty graph:
+
+Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
+    geom_point(size = 2.5, shape = 19) + 
+    xlab("Steam Time (s)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.text = element_text(face = "bold", size = 12), axis.title = element_text(face = "bold", size = 14)) +
+    geom_smooth(aes(y=peas_noboiled$fit), color = "orange", size = 1.5, 
+               method="glm",se=FALSE,method.args = list(family = "Gamma")) +
+    geom_hline(aes(yintercept = boil_mean), color = "#999999", 
+               linetype = "dashed", size = 1.5) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+    
+
+Mixed_model_plot
 ```
 
 
