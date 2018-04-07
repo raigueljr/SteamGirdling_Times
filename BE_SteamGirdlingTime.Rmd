@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(car)
 library(lme4)
+library(piecewiseSEM)
 ```
 
 
@@ -83,27 +84,29 @@ plot(all_peas$Trmt, all_peas$Abs_Blk)
 ```
 
 ```{r}
-
-ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
-  stat_boxplot(geom = 'errorbar', lwd =1) + 
-  geom_boxplot(lwd = 1) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-          panel.background = element_rect(fill = "white", colour = "white"), 
-          plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
-  xlab("Steam Treatment (s)") +
-  ylab("Absorbance (490 nm)") +
-  theme(axis.text = element_text(face = "bold", size = 12), 
-          axis.title = element_text(face = "bold", size = 14)) +
-  geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
-               fill="#33CCFF", lwd = 1) +
-  geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
-               fill="#33CCFF", lwd = 1) +
-  geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
-               fill="#33CCFF", lwd = 1)
-  
-  
+pdf('./figs/boxplot.pdf')
+final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
+    stat_boxplot(geom = 'errorbar', lwd =1) + 
+    geom_boxplot(lwd = 1) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+            panel.background = element_rect(fill = "white", colour = "white"), 
+            plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+    xlab("Steam Treatment (s)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.text = element_text(face = "bold", size = 12), 
+            axis.title = element_text(face = "bold", size = 14)) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1)
+final_boxplot
 ```
 
+```{r}
+final_boxplot
+```
 
 ```{r}
 #Subset data by Tap Roots and Lateral Roots
@@ -339,6 +342,7 @@ nrow(peas_noboiled)
 mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = peas_noboiled)
 summary(mixed_model)
 
+sem.model.fits(mixed_model)
 ```
 
 ```{r}
