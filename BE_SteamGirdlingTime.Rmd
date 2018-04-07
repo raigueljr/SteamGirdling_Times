@@ -379,13 +379,13 @@ Mixed_model_plot
 ```{r}
 #Make plot of diameters
 pdf('./figs/diam_plot.pdf')
-diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk, color=Trmt)) +
+diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
     geom_point()  + 
-    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE) +
-    facet_wrap(~ Trmt, nrow = 3) + 
+    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, color = "#33CCFF") +
+    facet_wrap(~ Trmt, nrow = 2) + 
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
           panel.background = element_rect(fill = "white", colour = "white"), 
-          plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+          plot.background = element_rect(fill = "lightgray"), legend.position="hidden", strip.text = element_text(face = "bold", size=12)) +
     xlab("Diameter (mm)") +
     ylab("Absorbance (490 nm)") +
     theme(axis.title = element_text(face = "bold", size = 14))
