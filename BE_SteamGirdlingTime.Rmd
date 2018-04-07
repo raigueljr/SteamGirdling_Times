@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(car)
 library(lme4)
-library(cowplot)
 ```
 
 
@@ -34,7 +33,8 @@ Plant_id = match("Plant", colnames(all_peas))
 for(i in nrow(all_peas):1) {
     if(all_peas[i,Sample] == 90 | 
        all_peas[i,Sample] == 91 | 
-       all_peas[i,Sample] == 177) {
+       all_peas[i,Sample] == 177|
+      all_peas[i,Plant_id] == 82) {
           all_peas = all_peas[-i,]
     }
 }
@@ -74,7 +74,6 @@ Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 ```{r}
 #Plot all data by treatment
 all_boxplot = plot(all_peas$Trmt, all_peas$Abs_Mass)
-all_boxplot$out
 ```
 
 
@@ -82,6 +81,29 @@ all_boxplot$out
 #Check to see if dividing out the mass caused increase in 45-120
 plot(all_peas$Trmt, all_peas$Abs_Blk)
 ```
+
+```{r}
+
+ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
+  stat_boxplot(geom = 'errorbar', lwd =1) + 
+  geom_boxplot(lwd = 1) + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+  xlab("Steam Treatment (s)") +
+  ylab("Absorbance (490 nm)") +
+  theme(axis.text = element_text(face = "bold", size = 12), 
+          axis.title = element_text(face = "bold", size = 14)) +
+  geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
+               fill="#33CCFF", lwd = 1) +
+  geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
+               fill="#33CCFF", lwd = 1) +
+  geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
+               fill="#33CCFF", lwd = 1)
+  
+  
+```
+
 
 ```{r}
 #Subset data by Tap Roots and Lateral Roots
@@ -171,7 +193,7 @@ plot(lat_trmt_model)
 hist(all_peas$Abs_Mass)
 
 #Try regression model
-all_time_gamma = glm(Abs_Mass ~ Time + Diam, data = all_peas)
+all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas)
 summary(all_time_gamma)
 ```
 
@@ -254,46 +276,46 @@ head(all_peas)
 ```
 ```{r}
 par(mfrow = c(2,5))
-boxplot(Abs_Mass~ Plant, data = Trmt_5, main = "5 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_10, main = "10 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_15, main = "15 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_20, main = "20 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_30, main = "30 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_45, main = "45 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_60, main = "60 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_120, main = "120 seconds")
-boxplot(Abs_Mass~ Plant, data = Trmt_L, main = "Live")
-boxplot(Abs_Mass~ Plant, data = Trmt_B, main = "Boiled")
+boxplot(Abs_Blk~ Plant, data = Trmt_5, main = "5 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_10, main = "10 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_15, main = "15 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_20, main = "20 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_30, main = "30 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_45, main = "45 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_60, main = "60 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_120, main = "120 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_L, main = "Live")
+boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
 ```
 ```{r}
-Live_plant_model =  lm(Abs_Mass~ Plant, data = Trmt_L)
+Live_plant_model =  lm(Abs_Blk~ Plant, data = Trmt_L)
 summary(Live_plant_model)
 
-Boiled_plant_model = lm(Abs_Mass~ Plant, data = Trmt_B)
+Boiled_plant_model = lm(Abs_Blk~ Plant, data = Trmt_B)
 summary(Boiled_plant_model)
 
-plant_model_5 = lm(Abs_Mass~ Plant, data = Trmt_5)
+plant_model_5 = lm(Abs_Blk~ Plant, data = Trmt_5)
 summary(plant_model_5)
 
-plant_model_10 = lm(Abs_Mass~ Plant, data = Trmt_10)
+plant_model_10 = lm(Abs_Blk~ Plant, data = Trmt_10)
 summary(plant_model_10)
 
-plant_model_15 = lm(Abs_Mass~ Plant, data = Trmt_15)
+plant_model_15 = lm(Abs_Blk~ Plant, data = Trmt_15)
 summary(plant_model_15)
 
-plant_model_20 = lm(Abs_Mass~ Plant, data = Trmt_20)
+plant_model_20 = lm(Abs_Blk~ Plant, data = Trmt_20)
 summary(plant_model_20)
 
-plant_model_30 = lm(Abs_Mass~ Plant, data = Trmt_30)
+plant_model_30 = lm(Abs_Blk~ Plant, data = Trmt_30)
 summary(plant_model_30)
 
-plant_model_45 = lm(Abs_Mass~ Plant, data = Trmt_45)
+plant_model_45 = lm(Abs_Blk~ Plant, data = Trmt_45)
 summary(plant_model_45)
 
-plant_model_60 = lm(Abs_Mass~ Plant, data = Trmt_60)
+plant_model_60 = lm(Abs_Blk~ Plant, data = Trmt_60)
 summary(plant_model_60)
 
-plant_model_120 = lm(Abs_Mass~ Plant, data = Trmt_120)
+plant_model_120 = lm(Abs_Blk~ Plant, data = Trmt_120)
 summary(plant_model_120)
 
 ```
@@ -323,7 +345,7 @@ summary(mixed_model)
 #get fitted values from the model and mean of boiled controls
 peas_noboiled$fit = fitted(mixed_model)
 
-boil_mean = mean(Smp_B$Abs_Blk)
+boil_mean = mean(Trmt_B$Abs_Blk)
  
 ```
 
@@ -341,6 +363,8 @@ Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
     geom_hline(aes(yintercept = boil_mean), color = "#999999", 
                linetype = "dashed", size = 1.5) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white", colour = "white"), plot.background = element_rect(fill = "lightgray"))
+
+Mixed_model_plot
 ```
 
 ```{r}
@@ -361,6 +385,7 @@ diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk, color=Trmt)) +
     xlab("Diameter (mm)") +
     ylab("Absorbance (490 nm)") +
     theme(axis.title = element_text(face = "bold", size = 14))
+diam_plot
 ```
 
 ```{r}
