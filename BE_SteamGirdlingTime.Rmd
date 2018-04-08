@@ -93,14 +93,14 @@ final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) +
             plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
     xlab("Steam Treatment (s)") +
     ylab("Absorbance (490 nm)") +
-    theme(axis.text = element_text(face = "bold", size = 12), 
-            axis.title = element_text(face = "bold", size = 14)) +
+    theme(axis.text = element_text(face = "bold", size = 16), 
+            axis.title = element_text(face = "bold", size = 20)) +
     geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1) +
+                 fill="#7EA95C", lwd = 1) +
     geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1) +
+                 fill="#7EA95C", lwd = 1) +
     geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1)
+                 fill="#7EA95C", lwd = 1)
 final_boxplot
 ```
 
@@ -360,13 +360,14 @@ Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
     geom_point(size = 2.5, shape = 19) + 
     xlab("Steam Time (s)") +
     ylab("Absorbance (490 nm)") +
-    theme(axis.text = element_text(face = "bold", size = 12), 
-          axis.title = element_text(face = "bold", size = 14)) +
-    geom_smooth(aes(y=peas_noboiled$fit), color = "#33CCFF", size = 1.5, 
+    theme(axis.text = element_text(face = "bold", size = 16), 
+          axis.title = element_text(face = "bold", size = 20)) +
+    geom_smooth(aes(y=peas_noboiled$fit), color = "#7EA95C", size = 1.5, 
                method="glm",se=FALSE,method.args = list(family = "Gamma")) +
     geom_hline(aes(yintercept = boil_mean), color = "#999999", 
                linetype = "dashed", size = 1.5) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white", colour = "white"), plot.background = element_rect(fill = "lightgray"))
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white", colour = "white"), plot.background = element_rect(fill = "lightgray")) +
+  scale_x_continuous(breaks=c(0, 15, 30, 45, 60, 120))
 
 Mixed_model_plot
 ```
@@ -381,14 +382,15 @@ Mixed_model_plot
 pdf('./figs/diam_plot.pdf')
 diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
     geom_point()  + 
-    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, color = "#33CCFF") +
+    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, color = "#7EA95C") +
     facet_wrap(~ Trmt, nrow = 2) + 
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
           panel.background = element_rect(fill = "white", colour = "white"), 
-          plot.background = element_rect(fill = "lightgray"), legend.position="hidden", strip.text = element_text(face = "bold", size=12)) +
+          plot.background = element_rect(fill = "lightgray"), legend.position="hidden", strip.text = element_text(face = "bold", size=18)) +
     xlab("Diameter (mm)") +
     ylab("Absorbance (490 nm)") +
-    theme(axis.title = element_text(face = "bold", size = 14))
+    theme(axis.title = element_text(face = "bold", size = 20), axis.text = element_text(size = 16)) + 
+    scale_x_continuous(breaks=c(0.5, 1.5))
 diam_plot
 ```
 
