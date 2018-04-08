@@ -355,6 +355,10 @@ boil_mean = mean(Trmt_B$Abs_Blk)
 
 ```{r}
 #Make mixed plot
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
+
 pdf('./figs/mixed_model_plot.pdf')
 Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
     geom_point(size = 2.5, shape = 19) + 
