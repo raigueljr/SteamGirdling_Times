@@ -1,0 +1,325 @@
+---
+title: "SteamGirdlingTimesFinalAnalysis"
+author: "Julie Raiguel"
+date: "April 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Call necessary libraries
+library(ggplot2)
+library(car)
+library(lme4)
+```
+
+```{r}
+#Read in csv file and delete empty columns
+all_peas = read.csv(file = "../data/FinalDataPeas.csv", header = TRUE)
+
+head(all_peas)
+all_peas = all_peas[,-c(14:19)]
+
+colnames(all_peas)
+nrow(all_peas)
+```
+
+```{r}
+#Remove rows of samples eliminated because of experimental mistakes
+Sample = match("Smp",colnames(all_peas))
+Plant_id = match("Plant", colnames(all_peas))
+
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Sample] == 90 | 
+       all_peas[i,Sample] == 91 | 
+       all_peas[i,Sample] == 177|
+      all_peas[i,Plant_id] == 82) {
+          all_peas = all_peas[-i,]
+    }
+}
+
+nrow(all_peas)
+```
+
+```{r}
+#Order Treatments
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
+```
+
+```{r}
+#Create Numeric Treatments Column for Regressions
+all_peas$Time = ifelse(all_peas$Trmt == 'L', 0, ifelse(all_peas$Trmt == 'B', NA, as.numeric(as.character(all_peas$Trmt))))
+
+head(all_peas)
+```
+
+```{r}
+#Subset Data by Treatment
+Trmt_5 = subset(all_peas, all_peas$Trmt == '5')
+nrow(Trmt_5)
+
+Trmt_10 = subset(all_peas, all_peas$Trmt == '10')
+Trmt_15 = subset(all_peas, all_peas$Trmt == '15')
+Trmt_20 = subset(all_peas, all_peas$Trmt == '20')
+Trmt_30 = subset(all_peas, all_peas$Trmt == '30')
+Trmt_45 = subset(all_peas, all_peas$Trmt == '45')
+Trmt_60 = subset(all_peas, all_peas$Trmt == '60')
+Trmt_120 = subset(all_peas, all_peas$Trmt == '120')
+Trmt_L = subset(all_peas, all_peas$Trmt == 'L')
+Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
+```
+
+```{r}
+#Look at absorbance data of all treatments with mass removed
+plot(all_peas$Trmt, all_peas$Abs_Blk)
+```
+
+```{r}
+#Look at distribution of absorbance data by treatment
+par(mfrow = c(2,5))
+
+hist(Trmt_5$Abs_Blk, main = "5 seconds", xlab = "Absorbance")
+hist(Trmt_10$Abs_Blk, main = "10 seconds", xlab = "Absorbance")
+hist(Trmt_15$Abs_Blk, main = "15 seconds", xlab = "Absorbance")
+hist(Trmt_20$Abs_Blk, main = "20 seconds", xlab = "Absorbance")
+hist(Trmt_30$Abs_Blk, main = "30 seconds", xlab = "Absorbance")
+hist(Trmt_45$Abs_Blk, main = "45 seconds", xlab = "Absorbance")
+hist(Trmt_60$Abs_Blk, main = "60 seconds", xlab = "Absorbance")
+hist(Trmt_120$Abs_Blk, main = "120 seconds", xlab = "Absorbance")
+hist(Trmt_L$Abs_Blk, main = "Live", xlab = "Absorbance")
+hist(Trmt_B$Abs_Blk, main = "Boiled", xlab = "Absorbance")
+```
+
+```{r}
+#Reorder the contrasts so treatments will be compared to boiled controls
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20',
+                                                 '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+
+#Create GLM model of the gamma family (because absorbance is > 0 and continuous)
+Trmt_model = glm(Abs_Blk ~ Trmt, data = all_peas, family = Gamma())
+
+summary(Trmt_model)
+Anova(Trmt_model, type =3)
+```
+
+```{r}
+#Create aesthetically pleasing boxplot 
+    #with treatments significantly different from boiled controls highlighted
+pdf('../figs/boxplot.pdf')
+final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
+    stat_boxplot(geom = 'errorbar', lwd =1) + 
+    geom_boxplot(lwd = 1) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), 
+          legend.position ="hidden",
+          axis.text = element_text(face = "bold", size = 16),
+          axis.title = element_text(face = "bold", size = 20)) +
+    xlab("Steam Treatment (s)") +
+    ylab("Absorbance (490 nm)") +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#33CCFF", lwd = 1)
+final_boxplot
+```
+
+```{r}
+final_boxplot
+```
+
+```{r}
+#Check Significance of Diameter
+Diam_model = glm(Abs_Blk ~ Diam, data = all_peas, family = Gamma())
+
+summary(Diam_model)
+Anova(Diam_model, type =3)
+```
+```{r}
+#Look at the positive diameter trend by treatment and notice it in live controls
+par(mfrow = c(2,5))
+plot(Abs_Blk ~ Diam, data = Trmt_L, main = "Live", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_5, main = "5 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_10, main = "10 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_15, main = "15 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_20, main = "20 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_30, main = "30 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_45, main = "45 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_60, main = "60 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_120, main = "120 seconds", xlab = "Diameter (mm)", ylab = "Absorbance")
+plot(Abs_Blk ~ Diam, data = Trmt_B, main = "Boiled", xlab = "Diameter (mm)", ylab = "Absorbance")
+```
+
+```{r}
+#Check diameter trend of live controls to see it is close to being significant
+Diam_Live_model = glm(Abs_Blk ~ Diam, data = Trmt_L, family = Gamma())
+
+summary(Diam_Live_model)
+Anova(Diam_Live_model, type =3)
+```
+```{r}
+#Reorder treatments for plotting
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
+```
+
+```{r}
+#Make aesthetically pleasing plot of diameter trends with GLM models
+pdf('../figs/diam_plot.pdf')
+diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
+    geom_point()  + 
+    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, 
+                color = "#33CCFF") +
+    facet_wrap(~ Trmt, nrow = 2) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), 
+          legend.position ="hidden", 
+          strip.text = element_text(face = "bold", size=18),
+          axis.title = element_text(face = "bold", size = 20),
+          axis.text = element_text(size = 16)) +
+    xlab("Diameter (mm)") +
+    ylab("Absorbance (490 nm)") +
+    scale_x_continuous(breaks=c(0.5, 1.5))
+diam_plot
+```
+
+```{r}
+diam_plot
+```
+
+```{r}
+#Look for trends in absorbance based on individual plants
+boxplot(all_peas$Abs_Blk~ all_peas$Plant)
+
+all_peas$Plant = as.factor(all_peas$Plant)
+Plant_model = glm(Abs_Blk~ Plant, data = all_peas, family = Gamma())
+Anova(Plant_model)
+```
+
+```{r}
+#Since plants are tied to treatments, check plant trends within treatments
+par(mfrow = c(2,5))
+boxplot(Abs_Blk~ Plant, data = Trmt_L, main = "Live")
+boxplot(Abs_Blk~ Plant, data = Trmt_5, main = "5 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_10, main = "10 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_15, main = "15 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_20, main = "20 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_30, main = "30 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_45, main = "45 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_60, main = "60 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_120, main = "120 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
+```
+
+```{r}
+Live_plant_model =  glm(Abs_Blk~ Plant, data = Trmt_L, family = Gamma())
+summary(Live_plant_model)
+
+Boiled_plant_model = glm(Abs_Blk~ Plant, data = Trmt_B, family = Gamma())
+summary(Boiled_plant_model)
+
+plant_model_5 = glm(Abs_Blk~ Plant, data = Trmt_5, family = Gamma())
+summary(plant_model_5)
+
+plant_model_10 = glm(Abs_Blk~ Plant, data = Trmt_10, family = Gamma())
+summary(plant_model_10)
+
+plant_model_15 = glm(Abs_Blk~ Plant, data = Trmt_15, family = Gamma())
+summary(plant_model_15)
+
+plant_model_20 = glm(Abs_Blk~ Plant, data = Trmt_20, family = Gamma())
+summary(plant_model_20)
+
+plant_model_30 = glm(Abs_Blk~ Plant, data = Trmt_30, family = Gamma())
+summary(plant_model_30)
+
+plant_model_45 = glm(Abs_Blk~ Plant, data = Trmt_45, family = Gamma())
+summary(plant_model_45)
+
+plant_model_60 = glm(Abs_Blk~ Plant, data = Trmt_60, family = Gamma())
+summary(plant_model_60)
+
+plant_model_120 = glm(Abs_Blk~ Plant, data = Trmt_120, family = Gamma())
+summary(plant_model_120)
+
+```
+
+```{r}
+#Due to plant identity and diameter trends in live controls,
+    #Make a mixed effects regression model treating those as random effects
+
+#Remove NAs to make mixed effect model
+peas_noboiled = all_peas
+
+Treatment = match("Trmt",colnames(all_peas))
+
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Treatment] == "B") {
+          peas_noboiled = peas_noboiled[-i,]
+    }
+}
+
+nrow(peas_noboiled)
+
+#Make mixed model of time removing plant and diameter
+mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), 
+                    family = Gamma, 
+                    data = peas_noboiled)
+summary(mixed_model)
+```
+
+```{r}
+#Compare mixed model to normal glm to see lower AIC and BIC values for mixed
+unmixed_model = glm(Abs_Blk~ Time, family = Gamma, data = peas_noboiled)
+summary(unmixed_model)
+
+anova(mixed_model, unmixed_model)
+```
+```{r}
+#Get fitted values from the model and mean of boiled controls
+peas_noboiled$fit = fitted(mixed_model)
+
+boil_mean = mean(Trmt_B$Abs_Blk)
+```
+
+```{r}
+#Create aesthetically pleasing scatterplot of Absorbance vs. Steam Time
+    #Overlay the mixed model in blue
+    #Add a dashed line showing the mean of boiled controls
+    
+pdf('../figs/mixed_model_plot.pdf')
+Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
+    geom_point(size = 2.5, shape = 19) + 
+    xlab("Steam Time (s)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.text = element_text(face = "bold", size = 12), 
+          axis.title = element_text(face = "bold", size = 20),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", colour = "white"),
+          plot.background = element_rect(fill = "lightgray")) +
+    geom_smooth(aes(y=peas_noboiled$fit), color = "#33CCFF", size = 1.5, 
+               method="glm",se=FALSE,method.args = list(family = "Gamma")) +
+    geom_hline(aes(yintercept = boil_mean), color = "#999999", 
+               linetype = "dashed", size = 1.5) +
+  scale_x_continuous(breaks=c(0, 5, 10, 15, 20, 30, 45, 60, 120))
+
+Mixed_model_plot
+```
+
+```{r}
+Mixed_model_plot
+```
+
