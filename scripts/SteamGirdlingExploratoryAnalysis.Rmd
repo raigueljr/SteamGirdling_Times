@@ -1,0 +1,411 @@
+---
+title: "BE_SteamGirdlingTime"
+author: "Julie Raiguel"
+date: "March 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Call necessary libraries
+library(ggplot2)
+library(car)
+library(lme4)
+library(piecewiseSEM)
+```
+
+
+```{r}
+#Read in csv file and delete empty columns
+all_peas = read.csv(file = "../data/FinalDataPeas.csv", header = TRUE)
+
+head(all_peas)
+all_peas = all_peas[,-c(14:19)]
+colnames(all_peas)
+nrow(all_peas)
+
+#Remove rows of samples eliminated because of mistakes in experiment
+Sample = match("Smp",colnames(all_peas))
+Plant_id = match("Plant", colnames(all_peas))
+
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Sample] == 90 | 
+       all_peas[i,Sample] == 91 | 
+       all_peas[i,Sample] == 177|
+      all_peas[i,Plant_id] == 82) {
+          all_peas = all_peas[-i,]
+    }
+}
+
+nrow(all_peas)
+```
+
+```{r}
+#Order Treatments
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
+
+#Create Numeric Treatments Column for Regressions
+all_peas$Time = ifelse(all_peas$Trmt == 'L', 0, ifelse(all_peas$Trmt == 'B', NA, as.numeric(as.character(all_peas$Trmt))))
+
+head(all_peas)
+```
+
+
+```{r}
+#Subset Data by Treatment
+Trmt_5 = subset(all_peas, all_peas$Trmt == '5')
+nrow(Trmt_5)
+
+Trmt_10 = subset(all_peas, all_peas$Trmt == '10')
+Trmt_15 = subset(all_peas, all_peas$Trmt == '15')
+Trmt_20 = subset(all_peas, all_peas$Trmt == '20')
+Trmt_30 = subset(all_peas, all_peas$Trmt == '30')
+Trmt_45 = subset(all_peas, all_peas$Trmt == '45')
+Trmt_60 = subset(all_peas, all_peas$Trmt == '60')
+Trmt_120 = subset(all_peas, all_peas$Trmt == '120')
+Trmt_L = subset(all_peas, all_peas$Trmt == 'L')
+Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
+```
+
+```{r}
+#Plot all data by treatment
+all_boxplot = plot(all_peas$Trmt, all_peas$Abs_Mass)
+```
+
+
+```{r}
+#Check to see if dividing out the mass caused increase in 45-120
+plot(all_peas$Trmt, all_peas$Abs_Blk)
+```
+
+```{r}
+pdf('../figs/boxplot.pdf')
+final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
+    stat_boxplot(geom = 'errorbar', lwd =1) + 
+    geom_boxplot(lwd = 1) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+            panel.background = element_rect(fill = "white", colour = "white"), 
+            plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+    xlab("Steam Treatment (s)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.text = element_text(face = "bold", size = 16), 
+            axis.title = element_text(face = "bold", size = 20)) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#7EA95C", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#7EA95C", lwd = 1) +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
+                 fill="#7EA95C", lwd = 1)
+final_boxplot
+```
+
+```{r}
+final_boxplot
+```
+
+```{r}
+#Subset data by Tap Roots and Lateral Roots
+Diam_Tap = subset(all_peas, all_peas$Tap_Lat == "Tap")
+Diam_Lat = subset(all_peas, all_peas$Tap_Lat == "Lat")
+
+nrow(Diam_Tap)
+nrow(Diam_Lat)
+```
+
+```{r}
+#Plot Data by Taps and Lats (With and Without Mass Correction)
+par(mfrow = c(2,2))
+plot(Diam_Tap$Trmt, Diam_Tap$Abs_Mass, main = "Tap Roots", ylab = "Absorbance/Dry Mass")
+plot(Diam_Lat$Trmt, Diam_Lat$Abs_Mass, main = "Lateral Roots", ylab = "Absorbance/Dry Mass")
+plot(Diam_Tap$Trmt, Diam_Tap$Abs_Blk, ylab = "Absorbance")
+plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, ylab = "Absorbance")
+```
+
+
+```{r}
+#Check distribution of data
+par(mfrow = c(2,5))
+
+hist(Trmt_5$Abs_Blk, main = "5 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_10$Abs_Blk, main = "10 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_15$Abs_Blk, main = "15 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_20$Abs_Blk, main = "20 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_30$Abs_Blk, main = "30 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_45$Abs_Blk, main = "45 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_60$Abs_Blk, main = "60 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_120$Abs_Blk, main = "120 seconds", xlab = "Absorbance/Dry Mass")
+hist(Trmt_L$Abs_Blk, main = "Live", xlab = "Absorbance/Dry Mass")
+hist(Trmt_B$Abs_Blk, main = "Boiled", xlab = "Absorbance/Dry Mass")
+
+```
+
+```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+all_trmt_model = lm(Abs_Mass ~ Trmt, data = all_peas)
+
+summary(all_trmt_model)
+Anova(all_trmt_model, type =3)
+
+par(mfrow = c(2,2))
+plot(all_trmt_model)
+```
+
+```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+all_trmt_glm = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
+
+summary(all_trmt_glm)
+Anova(all_trmt_glm, type =3)
+```
+```{r}
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Plant_id] == 82) {
+          all_peas = all_peas[-i,]
+    }
+}
+
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(all_peas$Trmt) 
+nomass_trmt_glm = glm(Abs_Blk ~ Trmt, data = all_peas, family = Gamma())
+
+summary(nomass_trmt_glm)
+Anova(nomass_trmt_glm, type =3)
+```
+
+```{r}
+Diam_Lat$Trmt = factor(Diam_Lat$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
+contrasts(Diam_Lat$Trmt) 
+lat_trmt_model = lm(Abs_Mass ~ Trmt, data = Diam_Lat)
+
+summary(lat_trmt_model)
+Anova(lat_trmt_model, type =3)
+
+par(mfrow = c(2,2))
+plot(lat_trmt_model)
+```
+
+```{r}
+#Check shape of data
+hist(all_peas$Abs_Mass)
+
+#Try regression model
+all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas)
+summary(all_time_gamma)
+```
+
+```{r}
+all_time_binomial = glm(Abs_Mass ~ Time, data = all_peas, family = binomial())
+summary(all_time_binomial)
+```
+```{r}
+all_time_gaussian = glm(Abs_Mass ~ Time, data = all_peas, family = gaussian())
+summary(all_time_gaussian)
+```
+
+```{r}
+anova(all_time_gamma, all_time_gaussian, all_time_binomial)
+```
+
+```{r}
+all_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve <- predict(all_time_gamma,newdata=all_gamma_predict,type="response")
+plot(all_peas$Abs_Mass~ Time, data=all_peas)
+lines(gamma_curve~Time, data = all_gamma_predict)
+```
+
+
+```{r}
+#Check lateral root data shape
+hist(Diam_Lat$Abs_Mass)
+
+#Try regression model on lateral roots only
+lat_time_model = glm(Abs_Mass ~ Time, data = Diam_Lat, family = Gamma)
+summary(lat_time_model)
+
+```
+
+```{r}
+lat_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve_lat <- predict(lat_time_model,newdata=lat_gamma_predict,type="response")
+plot(Diam_Lat$Abs_Mass~ Diam_Lat$Time)
+lines(gamma_curve_lat~Time, data = lat_gamma_predict)
+```
+
+```{r}
+nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
+
+summary(nomass_time_gamma)
+
+```
+
+```{r}
+nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
+gamma_curve <- predict(nomass_time_gamma,newdata=nomass_gamma_predict,type="response")
+plot(all_peas$Abs_Blk~ Time, data=all_peas)
+lines(gamma_curve~Time, data = nomass_gamma_predict)
+```
+
+```{r}
+#Plot Absorbance by Diameter for each treatment
+par(mfrow = c(2,5))
+plot(Abs_Mass ~ Diam, data = Trmt_L, main = "Live", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_5, main = "5 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_10, main = "10 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_15, main = "15 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_20, main = "20 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_30, main = "30 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_45, main = "45 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_60, main = "60 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_120, main = "120 seconds", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+plot(Abs_Mass ~ Diam, data = Trmt_B, main = "Boiled", xlab = "Diameter (mm)", ylab = "Absorbance/Dry Mass")
+```
+
+```{r}
+
+boxplot(all_peas$Abs_Mass~ all_peas$Plant)
+
+all_peas$Plant = as.factor(all_peas$Plant)
+plant_model = lm(Abs_Mass~ Plant + Trmt, data = all_peas)
+Anova(plant_model)
+
+head(all_peas)
+```
+```{r}
+par(mfrow = c(2,5))
+boxplot(Abs_Blk~ Plant, data = Trmt_5, main = "5 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_10, main = "10 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_15, main = "15 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_20, main = "20 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_30, main = "30 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_45, main = "45 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_60, main = "60 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_120, main = "120 seconds")
+boxplot(Abs_Blk~ Plant, data = Trmt_L, main = "Live")
+boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
+```
+```{r}
+Live_plant_model =  lm(Abs_Blk~ Plant, data = Trmt_L)
+summary(Live_plant_model)
+
+Boiled_plant_model = lm(Abs_Blk~ Plant, data = Trmt_B)
+summary(Boiled_plant_model)
+
+plant_model_5 = lm(Abs_Blk~ Plant, data = Trmt_5)
+summary(plant_model_5)
+
+plant_model_10 = lm(Abs_Blk~ Plant, data = Trmt_10)
+summary(plant_model_10)
+
+plant_model_15 = lm(Abs_Blk~ Plant, data = Trmt_15)
+summary(plant_model_15)
+
+plant_model_20 = lm(Abs_Blk~ Plant, data = Trmt_20)
+summary(plant_model_20)
+
+plant_model_30 = lm(Abs_Blk~ Plant, data = Trmt_30)
+summary(plant_model_30)
+
+plant_model_45 = lm(Abs_Blk~ Plant, data = Trmt_45)
+summary(plant_model_45)
+
+plant_model_60 = lm(Abs_Blk~ Plant, data = Trmt_60)
+summary(plant_model_60)
+
+plant_model_120 = lm(Abs_Blk~ Plant, data = Trmt_120)
+summary(plant_model_120)
+
+```
+
+
+```{r}
+#Remove NAs to make mixed effect model
+peas_noboiled = all_peas
+
+Treatment = match("Trmt",colnames(all_peas))
+
+for(i in nrow(all_peas):1) {
+    if(all_peas[i,Treatment] == "B") {
+          peas_noboiled = peas_noboiled[-i,]
+    }
+}
+
+nrow(peas_noboiled)
+
+#Make mixed model of time removing plant and diameter
+mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = peas_noboiled)
+summary(mixed_model)
+
+sem.model.fits(mixed_model)
+```
+
+```{r}
+#get fitted values from the model and mean of boiled controls
+peas_noboiled$fit = fitted(mixed_model)
+
+boil_mean = mean(Trmt_B$Abs_Blk)
+ 
+```
+
+```{r}
+#Make mixed plot
+all_peas$Trmt = factor(all_peas$Trmt, 
+                       levels = c('L', '5', '10', '15', '20', 
+                                  '30', '45', '60', '120', 'B'))
+
+pdf('../figs/mixed_model_plot.pdf')
+Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
+    geom_point(size = 2.5, shape = 19) + 
+    xlab("Steam Time (s)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.text = element_text(face = "bold", size = 16), 
+          axis.title = element_text(face = "bold", size = 20)) +
+    geom_smooth(aes(y=peas_noboiled$fit), color = "#7EA95C", size = 1.5, 
+               method="glm",se=FALSE,method.args = list(family = "Gamma")) +
+    geom_hline(aes(yintercept = boil_mean), color = "#999999", 
+               linetype = "dashed", size = 1.5) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white", colour = "white"), plot.background = element_rect(fill = "lightgray")) +
+  scale_x_continuous(breaks=c(0, 15, 30, 45, 60, 120))
+
+Mixed_model_plot
+```
+
+```{r}
+Mixed_model_plot
+```
+
+
+```{r}
+#Make plot of diameters
+pdf('../figs/diam_plot.pdf')
+diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
+    geom_point()  + 
+    stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, color = "#7EA95C") +
+    facet_wrap(~ Trmt, nrow = 2) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), legend.position="hidden", strip.text = element_text(face = "bold", size=18)) +
+    xlab("Diameter (mm)") +
+    ylab("Absorbance (490 nm)") +
+    theme(axis.title = element_text(face = "bold", size = 20), axis.text = element_text(size = 16)) + 
+    scale_x_continuous(breaks=c(0.5, 1.5))
+diam_plot
+```
+
+```{r}
+diam_plot
+```
+
+
+
+
+
+
+
+
