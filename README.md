@@ -46,6 +46,6 @@ Girdling kills the sugar conducting cells of the plant, called the phloem.  This
   If you only run the final analysis file, please be aware that the mass corrected absorbance was decided to be unusable because of unreliability of the scale used.  
   
 ### Acknowledgements
-Coauthors of this research include Dr Bridget Piculell, Dr. Seth Pritchard, and Dr. Allan Strand.
+Coauthors of this research include Dr. Bridget Piculell, Dr. Seth Pritchard, and Dr. Allan Strand.
 
 Thanks to Dr. Daniel McGlinn for help with this analysis and to Dr. Courtney Murren for making her lab available for massing samples.
