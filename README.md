@@ -20,12 +20,12 @@ Girdling kills the sugar conducting cells of the plant, called the phloem.  This
 2. **Plant**- the plant identity number for each individual
 
 3. **Smp**- the sample number 
-- Each plant number has a pair of sample numbers because one sample was the tap root and one was lateral roots.
+	- Each plant number has a pair of sample numbers because one sample was the tap root and one was lateral roots.
 
 4. **Trmt**- the treatment
--  "L" = live controls
--  "B" = dead (boiled) controls
--  Numbers = number of seconds steamed
+	- "L" = live controls
+	- "B" = dead (boiled) controls
+	- Numbers = number of seconds steamed
 
 5. **Tap_Lat**- indicates whether the sample was from tap or lateral roots
 
@@ -46,7 +46,7 @@ Girdling kills the sugar conducting cells of the plant, called the phloem.  This
 13. **Abs_Mass**- absorbance corrected for sample size by dividing by dry mass
  
  ### Structure of the Code and How to Run It
-  This repo contains three folders you will need to run the code.
+  This repo contains three folders you will need to run the code:
   
  1. **data**- contains the CSV file described above
       
@@ -56,6 +56,6 @@ Girdling kills the sugar conducting cells of the plant, called the phloem.  This
     - SteamGirdlingExploratoryAnalysis
     - SteamGirdlingTimesFinalAnalysis
 	    
-			To recreate my results, you will need a directory containing all three of these folders.  The exploratory markdown file contains relatively unorganized code where I originally determined which data to use, what types of models I needed, etc.  The final 	analysis markdown file contains the code for the best models and the figures and statistics I will be using for my paper.
+####To recreate my results, you will need a directory containing all three of these folders.  The exploratory markdown file contains relatively unorganized code where I originally determined which data to use, what types of models I needed, etc.  The final 	analysis markdown file contains the code for the best models and the figures and statistics I will be using for my paper.
 
   If you only run the final analysis file, please be aware that the mass corrected absorbance was decided to be unusable because of unreliability of the scale used.  
