@@ -3,7 +3,7 @@
 ### Background
   Fine root turnover is the annual replacement of roots with a diameter of 2 mm or less. This process is a vital component of carbon and nitrogen cycling. To have a complete understanding of these nutrient cycles, researchers must develop a better understanding of fine root senescence—the aging and eventual death of fine roots. It is very difficult to determine if a root is dead, so a reliable method of inducing root senescence would be beneficial to this field of study.  
   
-	Girdling kills the sugar conducting cells of the plant, called the phloem.  This can be accomplished through exposing cells to high heat using steam.  This method has been practiced on leaf petioles and reproductive pedicels, but not on roots.  The vitality of cells can be measured using a triphenyltetrazolium chloride (TTC) assay.  If the cells are alive and, therefore, respiring, clear TTC is reduced to red tetraformazan (TF).  This assay has been used on many plant parts, including roots.
+Girdling kills the sugar conducting cells of the plant, called the phloem.  This can be accomplished through exposing cells to high heat using steam.  This method has been practiced on leaf petioles and reproductive pedicels, but not on roots.  The vitality of cells can be measured using a triphenyltetrazolium chloride (TTC) assay.  If the cells are alive and, therefore, respiring, clear TTC is reduced to red tetraformazan (TF).  This assay has been used on many plant parts, including roots.
   
 ### Project Objectives
 - Determine whether steaming kills root cells
