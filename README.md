@@ -41,7 +41,7 @@ Girdling kills the sugar conducting cells of the plant, called the phloem.  This
     - SteamGirdlingExploratoryAnalysis
     - SteamGirdlingTimesFinalAnalysis
 	    
-#### To recreate my results, you will need a directory containing all three of these folders.  The exploratory markdown file contains relatively unorganized code where I originally determined which data to use, what types of models I needed, etc.  The final 	analysis markdown file contains the code for the best models and the figures and statistics I will be using for my paper.
+#### The exploratory markdown file contains relatively unorganized code where I originally determined which data to use, what types of models I needed, etc.  The final analysis markdown file contains the code for the best models and the figures and statistics I will be using for my paper.
 
   If you only run the final analysis file, please be aware that the mass corrected absorbance was decided to be unusable because of unreliability of the scale used.  
   
