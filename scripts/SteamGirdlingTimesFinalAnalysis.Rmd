@@ -109,6 +109,10 @@ Anova(Trmt_model, type =3)
 ```
 
 ```{r}
+#Reorder Treatments
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('L', '5', '10', '15', '20',
+                                                 '30', '45', '60', '120', 'B'))
+
 #Create aesthetically pleasing boxplot 
     #with treatments significantly different from boiled controls highlighted
 pdf('../figs/boxplot.pdf')
@@ -125,16 +129,49 @@ final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) +
     xlab("Steam Treatment (s)") +
     ylab("Absorbance (490 nm)") +
     geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1) +
+                 fill="#4D7D99", lwd = 1) +
     geom_boxplot(data=all_peas[all_peas$Trmt=="45",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1) +
+                 fill="#4D7D99", lwd = 1) +
     geom_boxplot(data=all_peas[all_peas$Trmt=="60",], aes(x = Trmt, y = Abs_Blk),
-                 fill="#33CCFF", lwd = 1)
+                 fill="#4D7D99", lwd = 1)
 final_boxplot
 ```
 
 ```{r}
 final_boxplot
+```
+
+```{r}
+#Create GLM model of the gamma family (because absorbance is > 0 and continuous)
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20',
+                                                 '30', '45', '60', '120'))
+
+Mass_model = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
+
+summary(Mass_model)
+Anova(Mass_model, type =3)
+```
+
+```{r}
+all_peas$Trmt = factor(all_peas$Trmt, levels = c('L', '5', '10', '15', '20',
+                                                 '30', '45', '60', '120', 'B'))
+
+#Make aesthetically pleasing mass corrected boxplot
+masses_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Mass)) + 
+    stat_boxplot(geom = 'errorbar', lwd =1) + 
+    geom_boxplot(lwd = 1) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.background = element_rect(fill = "white", colour = "white"), 
+          plot.background = element_rect(fill = "lightgray"), 
+          legend.position ="hidden",
+          axis.text = element_text(face = "bold", size = 16),
+          axis.title = element_text(face = "bold", size = 20)) +
+    xlab("Steam Treatment (s)") +
+    ylab("Absorbance / Dry Mass") +
+    geom_boxplot(data=all_peas[all_peas$Trmt=="B",], aes(x = Trmt, y = Abs_Mass),
+                 fill="#990000", lwd = 1)
+masses_boxplot
 ```
 
 ```{r}
@@ -179,7 +216,7 @@ pdf('../figs/diam_plot.pdf')
 diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
     geom_point()  + 
     stat_smooth(method=glm,method.args = list(family = "Gamma"), se=FALSE, 
-                color = "#33CCFF") +
+                color = "#4D7D99") +
     facet_wrap(~ Trmt, nrow = 2) + 
     theme(panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), 
@@ -310,7 +347,7 @@ Mixed_model_plot = ggplot(peas_noboiled,aes(x=Time,y=Abs_Blk)) +
           panel.grid.minor = element_blank(),
           panel.background = element_rect(fill = "white", colour = "white"),
           plot.background = element_rect(fill = "lightgray")) +
-    geom_smooth(aes(y=peas_noboiled$fit), color = "#33CCFF", size = 1.5, 
+    geom_smooth(aes(y=peas_noboiled$fit), color = "#4D7D99", size = 1.5, 
                method="glm",se=FALSE,method.args = list(family = "Gamma")) +
     geom_hline(aes(yintercept = boil_mean), color = "#999999", 
                linetype = "dashed", size = 1.5) +
@@ -321,5 +358,36 @@ Mixed_model_plot
 
 ```{r}
 Mixed_model_plot
+```
+
+```{r}
+#Create aesthetically pleasing histogram of controls
+control_data = rbind(Trmt_L, Trmt_B)
+
+nrow(control_data)
+#Reorder treatments for plotting
+control_data$Trmt = factor(control_data$Trmt, 
+                       levels = c('B','L'))
+pdf('../figs/controls_histogram.pdf')
+controls_hist = ggplot(data=control_data, aes(x = Abs_Blk)) + 
+  geom_histogram(aes(fill = Trmt), breaks=seq(0, 0.15, by=0.0075), colour="black", size = 1.5) +
+  scale_fill_manual(values=c("#4D7D99", "#990000"),name="Treatment",
+          breaks=c("B", "L"), 
+          labels=c("Boiled", "Live")) +
+  theme(axis.text = element_text(face = "bold", size = 16), 
+          axis.title = element_text(face = "bold", size = 20),
+          legend.position = c(0.8, 0.8),
+          legend.title = element_text(size=18, face="bold"),
+          legend.text = element_text(size = 14),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", colour = "white"),
+          plot.background = element_rect(fill = "lightgray")) +
+  xlab("Absorbance (490 nm)") +
+  ylab("Count")
+  
+ 
+
+controls_hist
 ```
 
