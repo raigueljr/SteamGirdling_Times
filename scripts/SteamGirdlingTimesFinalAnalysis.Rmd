@@ -261,6 +261,7 @@ boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
 ```
 
 ```{r}
+class(all_peas$Plant)
 Live_plant_model =  glm(Abs_Blk~ Plant, data = Trmt_L, family = Gamma())
 summary(Live_plant_model)
 

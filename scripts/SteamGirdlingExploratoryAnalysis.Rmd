@@ -76,12 +76,17 @@ Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 #Plot all data by treatment
 all_boxplot = plot(all_peas$Trmt, all_peas$Abs_Mass)
 ```
+```{r}
+sd(Trmt_L$Abs_Blk)
+sd(Trmt_B$Abs_Blk)
+```
 
 
 ```{r}
 #Check to see if dividing out the mass caused increase in 45-120
 plot(all_peas$Trmt, all_peas$Abs_Blk)
 ```
+
 
 ```{r}
 pdf('../figs/boxplot.pdf')
@@ -110,11 +115,17 @@ final_boxplot
 
 ```{r}
 #Subset data by Tap Roots and Lateral Roots
+
 Diam_Tap = subset(all_peas, all_peas$Tap_Lat == "Tap")
 Diam_Lat = subset(all_peas, all_peas$Tap_Lat == "Lat")
 
 nrow(Diam_Tap)
 nrow(Diam_Lat)
+
+summary(Diam_Tap$Diam)
+mean(Diam_Tap$Diam)
+summary(Diam_Lat$Diam)
+mean(Diam_Lat$Diam)
 ```
 
 ```{r}
