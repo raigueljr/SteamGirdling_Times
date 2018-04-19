@@ -9,13 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+##Set Up Packages
 ```{r}
-#Call necessary libraries
-library(ggplot2)
-library(car)
-library(lme4)
+#Install necessary packages
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("car")) install.packages("car")
+if (!require("lme4")) install.packages("lme4")
 ```
 
+##Set Up Data
 ```{r}
 #Read in csv file and delete empty columns
 all_peas = read.csv(file = "../data/FinalDataPeas.csv", header = TRUE)
@@ -45,7 +47,7 @@ nrow(all_peas)
 ```
 
 ```{r}
-#Order Treatments
+#Order Treatments by Steam Time
 all_peas$Trmt = factor(all_peas$Trmt, 
                        levels = c('L', '5', '10', '15', '20', 
                                   '30', '45', '60', '120', 'B'))
@@ -74,10 +76,51 @@ Trmt_L = subset(all_peas, all_peas$Trmt == 'L')
 Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 ```
 
+##Visualize Data
 ```{r}
-#Look at absorbance data of all treatments with mass removed
+#Look at absorbance data of all treatments without mass removed
 plot(all_peas$Trmt, all_peas$Abs_Blk)
 ```
+
+```{r}
+#Reorganize Control Data
+control_data = rbind(Trmt_L, Trmt_B)
+
+nrow(control_data)
+
+control_data$Trmt = factor(control_data$Trmt, 
+                       levels = c('B','L'))
+```
+
+```{r}
+#Make aesthetically pleasing histogram of controls
+pdf('../figs/controls_histogram.pdf')
+controls_hist = ggplot(data=control_data, aes(x = Abs_Blk)) + 
+  geom_histogram(aes(fill = Trmt), breaks=seq(0, 0.15, by=0.0075), colour="black", size = 1.5) +
+  scale_fill_manual(values=c("#4D7D99", "#990000"),name="Treatment",
+          breaks=c("B", "L"), 
+          labels=c("Boiled", "Live")) +
+  theme(axis.text = element_text(face = "bold", size = 16), 
+          axis.title = element_text(face = "bold", size = 20),
+          legend.position = c(0.8, 0.8),
+          legend.title = element_text(size=18, face="bold"),
+          legend.text = element_text(size = 14),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", colour = "white"),
+          plot.background = element_rect(fill = "lightgray")) +
+  xlab("Absorbance (490 nm)") +
+  ylab("Count")
+  
+ 
+controls_hist
+```
+
+```{r}
+#Look at histogram of controls
+controls_hist
+```
+
 
 ```{r}
 #Look at distribution of absorbance data by treatment
@@ -94,7 +137,8 @@ hist(Trmt_120$Abs_Blk, main = "120 seconds", xlab = "Absorbance")
 hist(Trmt_L$Abs_Blk, main = "Live", xlab = "Absorbance")
 hist(Trmt_B$Abs_Blk, main = "Boiled", xlab = "Absorbance")
 ```
-
+  
+##Run ANOVA on Treatment model
 ```{r}
 #Reorder the contrasts so treatments will be compared to boiled controls
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20',
@@ -109,7 +153,7 @@ Anova(Trmt_model, type =3)
 ```
 
 ```{r}
-#Reorder Treatments
+#Reorder Treatments by Steam Time
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('L', '5', '10', '15', '20',
                                                  '30', '45', '60', '120', 'B'))
 
@@ -138,25 +182,27 @@ final_boxplot
 ```
 
 ```{r}
+##Look at boxplot
 final_boxplot
 ```
 
 ```{r}
-#Create GLM model of the gamma family (because absorbance is > 0 and continuous)
+#Create GLM model of the gamma family for mass corrected data
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20',
                                                  '30', '45', '60', '120'))
 
-Mass_model = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
+Mass_Trmt_model = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
 
-summary(Mass_model)
-Anova(Mass_model, type =3)
+summary(Mass_Trmt_model)
+Anova(Mass_Trmt_model, type =3)
 ```
 
 ```{r}
+#Reorder treatments by steam time
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('L', '5', '10', '15', '20',
                                                  '30', '45', '60', '120', 'B'))
 
-#Make aesthetically pleasing mass corrected boxplot
+#Make aesthetically pleasing mass corrected boxplot for comparison
 masses_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Mass)) + 
     stat_boxplot(geom = 'errorbar', lwd =1) + 
     geom_boxplot(lwd = 1) + 
@@ -173,7 +219,8 @@ masses_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Mass)) +
                  fill="#990000", lwd = 1)
 masses_boxplot
 ```
-
+  
+##Diameter Trends
 ```{r}
 #Check Significance of Diameter
 Diam_model = glm(Abs_Blk ~ Diam, data = all_peas, family = Gamma())
@@ -203,12 +250,6 @@ Diam_Live_model = glm(Abs_Blk ~ Diam, data = Trmt_L, family = Gamma())
 summary(Diam_Live_model)
 Anova(Diam_Live_model, type =3)
 ```
-```{r}
-#Reorder treatments for plotting
-all_peas$Trmt = factor(all_peas$Trmt, 
-                       levels = c('L', '5', '10', '15', '20', 
-                                  '30', '45', '60', '120', 'B'))
-```
 
 ```{r}
 #Make aesthetically pleasing plot of diameter trends with GLM models
@@ -233,9 +274,11 @@ diam_plot
 ```
 
 ```{r}
+#Look at diameter plot
 diam_plot
 ```
 
+##Individual Plant Trends
 ```{r}
 #Look for trends in absorbance based on individual plants
 boxplot(all_peas$Abs_Blk~ all_peas$Plant)
@@ -261,7 +304,7 @@ boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
 ```
 
 ```{r}
-class(all_peas$Plant)
+#Check significance of plant id in explaining absorbance by treatment
 Live_plant_model =  glm(Abs_Blk~ Plant, data = Trmt_L, family = Gamma())
 summary(Live_plant_model)
 
@@ -293,7 +336,8 @@ plant_model_120 = glm(Abs_Blk~ Plant, data = Trmt_120, family = Gamma())
 summary(plant_model_120)
 
 ```
-
+  
+##Mixed Effects Regression Model
 ```{r}
 #Due to plant identity and diameter trends in live controls,
     #Make a mixed effects regression model treating those as random effects
@@ -358,37 +402,9 @@ Mixed_model_plot
 ```
 
 ```{r}
+#Look at mixed model plot
 Mixed_model_plot
 ```
 
-```{r}
-#Create aesthetically pleasing histogram of controls
-control_data = rbind(Trmt_L, Trmt_B)
 
-nrow(control_data)
-#Reorder treatments for plotting
-control_data$Trmt = factor(control_data$Trmt, 
-                       levels = c('B','L'))
-pdf('../figs/controls_histogram.pdf')
-controls_hist = ggplot(data=control_data, aes(x = Abs_Blk)) + 
-  geom_histogram(aes(fill = Trmt), breaks=seq(0, 0.15, by=0.0075), colour="black", size = 1.5) +
-  scale_fill_manual(values=c("#4D7D99", "#990000"),name="Treatment",
-          breaks=c("B", "L"), 
-          labels=c("Boiled", "Live")) +
-  theme(axis.text = element_text(face = "bold", size = 16), 
-          axis.title = element_text(face = "bold", size = 20),
-          legend.position = c(0.8, 0.8),
-          legend.title = element_text(size=18, face="bold"),
-          legend.text = element_text(size = 14),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = "white", colour = "white"),
-          plot.background = element_rect(fill = "lightgray")) +
-  xlab("Absorbance (490 nm)") +
-  ylab("Count")
-  
- 
-
-controls_hist
-```
 

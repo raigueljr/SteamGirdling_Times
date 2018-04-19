@@ -8,16 +8,18 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+  
+##Set up Packages
 ```{r}
-#Call necessary libraries
-library(ggplot2)
-library(car)
-library(lme4)
-library(piecewiseSEM)
+#Install necessary packages
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("car")) install.packages("car")
+if (!require("lme4")) install.packages("lme4")
+if (!require("piecewiseSEM")) install.packages("piecewiseSEM")
+
 ```
-
-
+  
+##Set up Data
 ```{r}
 #Read in csv file and delete empty columns
 all_peas = read.csv(file = "../data/FinalDataPeas.csv", header = TRUE)
@@ -26,15 +28,17 @@ head(all_peas)
 all_peas = all_peas[,-c(14:19)]
 colnames(all_peas)
 nrow(all_peas)
+```
 
+```{r}
 #Remove rows of samples eliminated because of mistakes in experiment
-Sample = match("Smp",colnames(all_peas))
+Sample_id = match("Smp",colnames(all_peas))
 Plant_id = match("Plant", colnames(all_peas))
 
 for(i in nrow(all_peas):1) {
-    if(all_peas[i,Sample] == 90 | 
-       all_peas[i,Sample] == 91 | 
-       all_peas[i,Sample] == 177|
+    if(all_peas[i,Sample_id] == 90 | 
+       all_peas[i,Sample_id] == 91 | 
+       all_peas[i,Sample_id] == 177|
       all_peas[i,Plant_id] == 82) {
           all_peas = all_peas[-i,]
     }
@@ -71,31 +75,35 @@ Trmt_120 = subset(all_peas, all_peas$Trmt == '120')
 Trmt_L = subset(all_peas, all_peas$Trmt == 'L')
 Trmt_B = subset(all_peas, all_peas$Trmt == 'B')
 ```
-
+  
+##Explore Data
 ```{r}
 #Plot all data by treatment
-all_boxplot = plot(all_peas$Trmt, all_peas$Abs_Mass)
+plot(all_peas$Trmt, all_peas$Abs_Mass)
+```
+
+```{r}
+#Check to see if dividing out the mass caused increase in 45-120
+plot(all_peas$Trmt, all_peas$Abs_Blk)
 ```
 ```{r}
+#Check standard deviations of controls because of live variation
 sd(Trmt_L$Abs_Blk)
 sd(Trmt_B$Abs_Blk)
 ```
 
 
 ```{r}
-#Check to see if dividing out the mass caused increase in 45-120
-plot(all_peas$Trmt, all_peas$Abs_Blk)
-```
-
-
-```{r}
+#Create Aesthetically Pleasing Boxplot as pdf
+#Fill treatments that are not significantly different
 pdf('../figs/boxplot.pdf')
 final_boxplot = ggplot(all_peas, aes(x = Trmt, y = Abs_Blk)) + 
     stat_boxplot(geom = 'errorbar', lwd =1) + 
     geom_boxplot(lwd = 1) + 
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
             panel.background = element_rect(fill = "white", colour = "white"), 
-            plot.background = element_rect(fill = "lightgray"), legend.position="hidden") +
+            plot.background = element_rect(fill = "lightgray"), 
+            legend.position="hidden") +
     xlab("Steam Treatment (s)") +
     ylab("Absorbance (490 nm)") +
     theme(axis.text = element_text(face = "bold", size = 16), 
@@ -110,6 +118,7 @@ final_boxplot
 ```
 
 ```{r}
+#Check Boxplot
 final_boxplot
 ```
 
@@ -122,6 +131,7 @@ Diam_Lat = subset(all_peas, all_peas$Tap_Lat == "Lat")
 nrow(Diam_Tap)
 nrow(Diam_Lat)
 
+##Look at basic stats on diameter sizes
 summary(Diam_Tap$Diam)
 mean(Diam_Tap$Diam)
 summary(Diam_Lat$Diam)
@@ -139,7 +149,7 @@ plot(Diam_Lat$Trmt, Diam_Lat$Abs_Blk, ylab = "Absorbance")
 
 
 ```{r}
-#Check distribution of data
+#Check distribution of data within treatments
 par(mfrow = c(2,5))
 
 hist(Trmt_5$Abs_Blk, main = "5 seconds", xlab = "Absorbance/Dry Mass")
@@ -154,8 +164,10 @@ hist(Trmt_L$Abs_Blk, main = "Live", xlab = "Absorbance/Dry Mass")
 hist(Trmt_B$Abs_Blk, main = "Boiled", xlab = "Absorbance/Dry Mass")
 
 ```
-
+  
+##Test models
 ```{r}
+#Try linear model and ANOVA of mass corrected data
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(all_peas$Trmt) 
 all_trmt_model = lm(Abs_Mass ~ Trmt, data = all_peas)
@@ -168,6 +180,7 @@ plot(all_trmt_model)
 ```
 
 ```{r}
+#Try generalized linear model of the gamma family on Mass corrected data
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(all_peas$Trmt) 
 all_trmt_glm = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
@@ -175,13 +188,9 @@ all_trmt_glm = glm(Abs_Mass ~ Trmt, data = all_peas, family = Gamma())
 summary(all_trmt_glm)
 Anova(all_trmt_glm, type =3)
 ```
-```{r}
-for(i in nrow(all_peas):1) {
-    if(all_peas[i,Plant_id] == 82) {
-          all_peas = all_peas[-i,]
-    }
-}
 
+```{r}
+#Try generalized linear model of the gamma family on mass uncorrected data
 all_peas$Trmt = factor(all_peas$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(all_peas$Trmt) 
 nomass_trmt_glm = glm(Abs_Blk ~ Trmt, data = all_peas, family = Gamma())
@@ -191,6 +200,7 @@ Anova(nomass_trmt_glm, type =3)
 ```
 
 ```{r}
+#Try linear model of mass corrected lateral roots
 Diam_Lat$Trmt = factor(Diam_Lat$Trmt, levels = c('B', 'L', '5', '10', '15', '20', '30', '45', '60', '120'))
 contrasts(Diam_Lat$Trmt) 
 lat_trmt_model = lm(Abs_Mass ~ Trmt, data = Diam_Lat)
@@ -206,25 +216,30 @@ plot(lat_trmt_model)
 #Check shape of data
 hist(all_peas$Abs_Mass)
 
-#Try regression model
-all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas)
+#Try generalized linear regression model with gamma family for mass corrected
+all_time_gamma = glm(Abs_Mass ~ Time, data = all_peas, family = Gamma())
 summary(all_time_gamma)
 ```
 
 ```{r}
+#Try generalized linear regression model with binomial family for mass corrected
 all_time_binomial = glm(Abs_Mass ~ Time, data = all_peas, family = binomial())
 summary(all_time_binomial)
 ```
+
 ```{r}
+#Try generalized linear regression model with gaussian family for mass corrected
 all_time_gaussian = glm(Abs_Mass ~ Time, data = all_peas, family = gaussian())
 summary(all_time_gaussian)
 ```
 
 ```{r}
+#Compare the models for mass corrected to see expected results
 anova(all_time_gamma, all_time_gaussian, all_time_binomial)
 ```
 
 ```{r}
+#Plot best regression model for mass corrected data
 all_gamma_predict <- data.frame(Time=seq(0,120,5))
 gamma_curve <- predict(all_time_gamma,newdata=all_gamma_predict,type="response")
 plot(all_peas$Abs_Mass~ Time, data=all_peas)
@@ -236,13 +251,14 @@ lines(gamma_curve~Time, data = all_gamma_predict)
 #Check lateral root data shape
 hist(Diam_Lat$Abs_Mass)
 
-#Try regression model on lateral roots only
+#Try regression model on mass corrected data for lateral roots only
 lat_time_model = glm(Abs_Mass ~ Time, data = Diam_Lat, family = Gamma)
 summary(lat_time_model)
 
 ```
 
 ```{r}
+#Plot model for mass corrected for lateral roots
 lat_gamma_predict <- data.frame(Time=seq(0,120,5))
 gamma_curve_lat <- predict(lat_time_model,newdata=lat_gamma_predict,type="response")
 plot(Diam_Lat$Abs_Mass~ Diam_Lat$Time)
@@ -250,6 +266,7 @@ lines(gamma_curve_lat~Time, data = lat_gamma_predict)
 ```
 
 ```{r}
+#Try regression model for mass uncorrected data
 nomass_time_gamma = glm(Abs_Blk ~ Time, data = all_peas, family = Gamma())
 
 summary(nomass_time_gamma)
@@ -257,6 +274,7 @@ summary(nomass_time_gamma)
 ```
 
 ```{r}
+#Plot regression model for mass uncorrected data
 nomass_gamma_predict <- data.frame(Time=seq(0,120,5))
 gamma_curve <- predict(nomass_time_gamma,newdata=nomass_gamma_predict,type="response")
 plot(all_peas$Abs_Blk~ Time, data=all_peas)
@@ -279,7 +297,7 @@ plot(Abs_Mass ~ Diam, data = Trmt_B, main = "Boiled", xlab = "Diameter (mm)", yl
 ```
 
 ```{r}
-
+#Look at influence of individual plants (mass corrected)
 boxplot(all_peas$Abs_Mass~ all_peas$Plant)
 
 all_peas$Plant = as.factor(all_peas$Plant)
@@ -289,6 +307,7 @@ Anova(plant_model)
 head(all_peas)
 ```
 ```{r}
+#Look at influence of individual plants within treatments (mass uncorrected)
 par(mfrow = c(2,5))
 boxplot(Abs_Blk~ Plant, data = Trmt_5, main = "5 seconds")
 boxplot(Abs_Blk~ Plant, data = Trmt_10, main = "10 seconds")
@@ -302,6 +321,7 @@ boxplot(Abs_Blk~ Plant, data = Trmt_L, main = "Live")
 boxplot(Abs_Blk~ Plant, data = Trmt_B, main = "Boiled")
 ```
 ```{r}
+#Check significance of individual plant differences (mass uncorrected)
 Live_plant_model =  lm(Abs_Blk~ Plant, data = Trmt_L)
 summary(Live_plant_model)
 
@@ -348,8 +368,10 @@ for(i in nrow(all_peas):1) {
 }
 
 nrow(peas_noboiled)
+```
 
-#Make mixed model of time removing plant and diameter
+```{r}
+#Make mixed model of time removing plant and diameter and try to check R-squared
 mixed_model = glmer(Abs_Blk~ Time + (1|Plant) + (1|Diam), family = Gamma, data = peas_noboiled)
 summary(mixed_model)
 
@@ -365,7 +387,7 @@ boil_mean = mean(Trmt_B$Abs_Blk)
 ```
 
 ```{r}
-#Make mixed plot
+#Make mixed model plot as pdf
 all_peas$Trmt = factor(all_peas$Trmt, 
                        levels = c('L', '5', '10', '15', '20', 
                                   '30', '45', '60', '120', 'B'))
@@ -388,12 +410,13 @@ Mixed_model_plot
 ```
 
 ```{r}
+#Look at mixed model plot
 Mixed_model_plot
 ```
 
 
 ```{r}
-#Make plot of diameters
+#Make plot of diameter trends in pdf (mass uncorrected)
 pdf('../figs/diam_plot.pdf')
 diam_plot = ggplot(all_peas, aes(x=Diam, y=Abs_Blk)) +
     geom_point()  + 
@@ -410,6 +433,7 @@ diam_plot
 ```
 
 ```{r}
+#Look at plot of diameter trends
 diam_plot
 ```
 
